@@ -3,6 +3,11 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="バイト管理">
+<meta name="theme-color" content="#0e0f13">
 <title>バイト給与管理</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -381,12 +386,29 @@ canvas{width:100%!important;}
       </div>
 
       <div class="sec-title">データ管理</div>
-      <div class="settings-card">
+      <div class="settings-card" style="margin-bottom:10px;">
+        <div class="sitem">
+          <div class="sicon"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="var(--accent2)" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg></div>
+          <div class="sinfo"><div class="sl">データをエクスポート</div><div class="ss">JSONファイルに書き出してバックアップ</div></div>
+          <button class="btn btn-outline" style="font-size:12px;padding:7px 12px;color:var(--accent2);border-color:rgba(96,212,240,0.3);" onclick="exportData()">保存</button>
+        </div>
+        <div class="sitem">
+          <div class="sicon"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg></div>
+          <div class="sinfo"><div class="sl">データをインポート</div><div class="ss">バックアップJSONから復元</div></div>
+          <label class="btn btn-outline" style="font-size:12px;padding:7px 12px;cursor:pointer;color:var(--accent);border-color:rgba(200,240,96,0.3);">
+            復元
+            <input type="file" accept=".json" style="display:none;" onchange="importData(this)">
+          </label>
+        </div>
         <div class="sitem">
           <div class="sicon"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="var(--red)" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/><path d="M10 11v6M14 11v6M9 6V4h6v2"/></svg></div>
           <div class="sinfo"><div class="sl">全データを削除</div><div class="ss">シフト・給与データをすべて消去</div></div>
           <button class="btn btn-danger" onclick="clearAllData()">削除</button>
         </div>
+      </div>
+      <div style="margin-bottom:16px;padding:12px 14px;background:rgba(96,212,240,0.06);border:1px solid rgba(96,212,240,0.2);border-radius:10px;font-size:11px;color:var(--text-sub);line-height:1.8;">
+        <strong style="color:var(--accent2);">データを永続保存するには</strong><br>
+        ブラウザの「ホーム画面に追加」でインストールすると、OSがアプリとして管理するためデータが消えにくくなります。定期的なエクスポートも推奨します。
       </div>
     </div>
 
@@ -455,25 +477,105 @@ let mainChart = null;
 // ═══════════════════════════════════════════════
 // INIT
 // ═══════════════════════════════════════════════
-function init(){
-  const raw = localStorage.getItem('baito-v4');
-  if(raw){
-    try{
-      const p = JSON.parse(raw);
-      if(p.jobs) p.jobs = p.jobs.map(j=>({...j,options:{...defaultOpts(),...(j.options||{})}}));
-      state = {...state,...p};
-    }catch(e){}
-  }
+function applyLoaded(raw){
+  try{
+    const p = JSON.parse(raw);
+    if(p.jobs) p.jobs = p.jobs.map(j=>({...j,options:{...defaultOpts(),...(j.options||{})}}));
+    state = {...state,...p};
+  }catch(e){}
+}
+function bootUI(){
   const now = new Date();
   state.viewMonth = {year:now.getFullYear(), month:now.getMonth()+1};
   document.getElementById('inp-date').value = now.toISOString().split('T')[0];
-  // 扶養上限を入力欄に反映
   const fi = document.getElementById('fuyo-limit-input');
   if(fi) fi.value = state.fuyoLimit ?? 1030000;
   updateJobSelector();
   renderAll();
 }
-function save(){ localStorage.setItem('baito-v4', JSON.stringify(state)); }
+function init(){
+  // 1st: try localStorage
+  const lsRaw = localStorage.getItem('baito-v4');
+  if(lsRaw) applyLoaded(lsRaw);
+
+  // 2nd: try IndexedDB (may have newer data if localStorage was cleared)
+  try {
+    const req = indexedDB.open('baito-db', 1);
+    req.onupgradeneeded = e => e.target.result.createObjectStore('kv');
+    req.onsuccess = e => {
+      const tx = e.target.result.transaction('kv','readonly');
+      const get = tx.objectStore('kv').get('baito-v4');
+      get.onsuccess = () => {
+        if(get.result && (!lsRaw || get.result.length >= lsRaw.length)){
+          applyLoaded(get.result);
+          bootUI();
+        }
+      };
+    };
+  } catch(e){}
+
+  bootUI();
+}
+
+// PWA マニフェストを動的注入（ホーム画面追加で永続化）
+(function(){
+  const manifest = {
+    name:'バイト給与管理', short_name:'バイト管理',
+    start_url:'.', display:'standalone',
+    background_color:'#0e0f13', theme_color:'#0e0f13',
+    icons:[{src:"data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='20' fill='%230e0f13'/><text y='70' x='50' text-anchor='middle' font-size='55' fill='%23c8f060'>¥</text></svg>",sizes:'any',type:'image/svg+xml'}]
+  };
+  const link = document.createElement('link');
+  link.rel = 'manifest';
+  link.href = URL.createObjectURL(new Blob([JSON.stringify(manifest)],{type:'application/json'}));
+  document.head.appendChild(link);
+})();
+function save(){
+  const data = JSON.stringify(state);
+  localStorage.setItem('baito-v4', data);
+  // IndexedDB にも二重保存（Safari ITP対策）
+  try {
+    const req = indexedDB.open('baito-db', 1);
+    req.onupgradeneeded = e => e.target.result.createObjectStore('kv');
+    req.onsuccess = e => {
+      const tx = e.target.result.transaction('kv','readwrite');
+      tx.objectStore('kv').put(data, 'baito-v4');
+    };
+  } catch(e){}
+}
+
+function exportData(){
+  const {viewMonth, ...exportState} = state;
+  const blob = new Blob([JSON.stringify(exportState, null, 2)], {type:'application/json'});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = `baito-backup-${new Date().toISOString().slice(0,10)}.json`;
+  a.click();
+  showToast('バックアップを保存しました ✓');
+}
+
+function importData(input){
+  const file = input.files[0];
+  if(!file) return;
+  const reader = new FileReader();
+  reader.onload = e => {
+    try {
+      const p = JSON.parse(e.target.result);
+      if(p.jobs) state.jobs = p.jobs.map(j=>({...j,options:{...defaultOpts(),...(j.options||{})}}));
+      if(p.shifts)  state.shifts  = p.shifts;
+      if(p.history) state.history = p.history;
+      if(p.fuyoLimit != null) state.fuyoLimit = p.fuyoLimit;
+      save(); renderAll();
+      const fi = document.getElementById('fuyo-limit-input');
+      if(fi) fi.value = state.fuyoLimit ?? 1030000;
+      showToast('データを復元しました ✓');
+    } catch(err) {
+      showToast('⚠ ファイルの読み込みに失敗しました','⚠');
+    }
+    input.value = '';
+  };
+  reader.readAsText(file);
+}
 
 // ═══════════════════════════════════════════════
 // NAVIGATION
