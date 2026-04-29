@@ -501,7 +501,67 @@ function changeMonth(d){
 // ═══════════════════════════════════════════════
 // CALC ENGINE
 // ═══════════════════════════════════════════════
-function isWE(dateStr){ const d=new Date(dateStr+'T00:00:00'); return d.getDay()===0||d.getDay()===6; }
+// ═══════════════════════════════════════════════
+// JAPANESE HOLIDAY CALCULATOR
+// ═══════════════════════════════════════════════
+const _jpHolCache = {};
+function getJPHolidays(year) {
+  if (_jpHolCache[year]) return _jpHolCache[year];
+  function fmt(y,m,d){ return `${y}-${String(m).padStart(2,'0')}-${String(d).padStart(2,'0')}`; }
+  function fmtD(dt){ return fmt(dt.getFullYear(),dt.getMonth()+1,dt.getDate()); }
+  function nthMon(y,m,n){ let d=1; while(new Date(y,m-1,d).getDay()!==1)d++; return d+(n-1)*7; }
+  // 春分・秋分 概算 (1980-2099)
+  function shunbun(y){ return Math.floor(20.8431+0.242194*(y-1980)-Math.floor((y-1980)/4)); }
+  function shubun(y){  return Math.floor(23.2488+0.242194*(y-1980)-Math.floor((y-1980)/4)); }
+
+  const h = new Set();
+  h.add(fmt(year,1,1));           // 元日
+  h.add(fmt(year,2,11));          // 建国記念の日
+  if(year>=2020) h.add(fmt(year,2,23)); // 天皇誕生日
+  h.add(fmt(year,3,shunbun(year))); // 春分の日
+  h.add(fmt(year,4,29));          // 昭和の日
+  h.add(fmt(year,5,3));           // 憲法記念日
+  h.add(fmt(year,5,4));           // みどりの日
+  h.add(fmt(year,5,5));           // こどもの日
+  if(year>=2016) h.add(fmt(year,8,11)); // 山の日
+  h.add(fmt(year,9,shubun(year))); // 秋分の日
+  h.add(fmt(year,11,3));          // 文化の日
+  h.add(fmt(year,11,23));         // 勤労感謝の日
+  h.add(fmt(year,1,nthMon(year,1,2)));   // 成人の日
+  h.add(fmt(year,7,nthMon(year,7,3)));   // 海の日
+  h.add(fmt(year,9,nthMon(year,9,3)));   // 敬老の日
+  h.add(fmt(year,10,nthMon(year,10,2))); // スポーツの日
+
+  // 振替休日: 祝日が日曜→翌月曜（既に祝日なら更に翌日）
+  const base = new Set(h);
+  base.forEach(s => {
+    const [y,m,d] = s.split('-').map(Number);
+    if(new Date(y,m-1,d).getDay()===0){
+      let nx = new Date(y,m-1,d+1);
+      while(h.has(fmtD(nx))) nx.setDate(nx.getDate()+1);
+      h.add(fmtD(nx));
+    }
+  });
+
+  // 国民の休日: 祝日に挟まれた平日
+  const after = new Set(h);
+  for(let m=1;m<=12;m++){
+    const days = new Date(year,m,0).getDate();
+    for(let d=2;d<days;d++){
+      const cur = fmt(year,m,d);
+      const dt  = new Date(year,m-1,d);
+      if(after.has(cur)||dt.getDay()===0||dt.getDay()===6) continue;
+      const prev = fmtD(new Date(year,m-1,d-1));
+      const next = fmtD(new Date(year,m-1,d+1));
+      if(after.has(prev)&&after.has(next)) h.add(cur);
+    }
+  }
+  _jpHolCache[year] = h;
+  return h;
+}
+function isHoliday(dateStr){ return getJPHolidays(Number(dateStr.slice(0,4))).has(dateStr); }
+
+function isWE(dateStr){ const d=new Date(dateStr+'T00:00:00'); return d.getDay()===0||d.getDay()===6||isHoliday(dateStr); }
 
 function calcShift(shift){
   const job = state.jobs.find(j=>j.id===shift.jobId);
@@ -551,10 +611,17 @@ function renderHome(){
   document.getElementById('month-label').textContent=`${year}年 ${month}月`;
 
   const t=monthCalc(year,month);
-  animNum('hero-total', t.total);
-
-  const hh=Math.floor(t.hours), hm=Math.round((t.hours%1)*60);
-  document.getElementById('hero-sub-total').textContent=`${t.days}日 / ${hh}時間${hm}分勤務`;
+  const hist=state.history.find(h=>h.year===year&&h.month===month);
+  if(hist){
+    let confTotal=0;
+    (hist.entries||[]).forEach(e=>{ confTotal+=(e.taxable||0)+(e.nonTaxable||0); });
+    animNum('hero-total', confTotal);
+    document.getElementById('hero-sub-total').textContent=`確定済み（課税＋非課税）`;
+  } else {
+    animNum('hero-total', t.total);
+    const hh=Math.floor(t.hours), hm=Math.round((t.hours%1)*60);
+    document.getElementById('hero-sub-total').textContent=`${t.days}日 / ${hh}時間${hm}分勤務`;
+  }
   document.getElementById('stat-transport').textContent='¥'+t.transport.toLocaleString();
   document.getElementById('stat-days-detail').textContent=`${t.days}日出勤`;
 
@@ -901,9 +968,10 @@ function renderShiftList(){
     const p=calcShift(s);
     const d=new Date(s.date+'T00:00:00');
     const we=d.getDay()===0||d.getDay()===6;
+    const hol=isHoliday(s.date);
     return `<div class="shift-item">
       <div class="shift-left">
-        <div class="shift-date">${s.date.slice(5)} (${dn[d.getDay()]})${we?' <span style="color:var(--orange)">●</span>':''}</div>
+        <div class="shift-date">${s.date.slice(5)} (${dn[d.getDay()]})${we||hol?' <span style="color:var(--orange)">●</span>':''}${hol?' <span style="font-size:10px;color:var(--orange)">祝</span>':''}</div>
         <div class="shift-time">${s.start} → ${s.end}${s.breakMin>0?` 休${s.breakMin}分`:''}</div>
         <div class="shift-job-tag"><span style="display:inline-block;width:6px;height:6px;border-radius:50%;background:${job?.color||'#666'}"></span>${job?.name||'不明'}${s.memo?' / '+s.memo:''}</div>
       </div>
