@@ -213,6 +213,66 @@ canvas{width:100%!important;}
 ::-webkit-scrollbar{width:4px;}
 ::-webkit-scrollbar-thumb{background:var(--border);border-radius:2px;}
 
+/* ── PLAN CALENDAR ──────────────────── */
+.cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:3px;}
+.cal-head-cell{text-align:center;font-size:10px;color:var(--text-sub);padding:6px 0;letter-spacing:0.5px;}
+.cal-cell{background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:5px 4px;min-height:56px;cursor:pointer;transition:all 0.15s;overflow:hidden;}
+.cal-cell:hover{border-color:var(--accent);background:var(--surface3);}
+.cal-cell.today{border-color:var(--accent2)!important;}
+.cal-cell.empty{background:transparent;border-color:transparent!important;cursor:default;pointer-events:none;}
+.cal-cell.sun .cal-num{color:var(--red);}
+.cal-cell.sat .cal-num{color:var(--accent2);}
+.cal-cell.hol .cal-num{color:var(--orange);}
+.cal-num{font-size:11px;color:var(--text-sub);line-height:1;margin-bottom:3px;}
+.cal-cell.today .cal-num{color:var(--accent2);font-weight:700;}
+.cal-shift-dots{display:flex;flex-wrap:wrap;gap:2px;margin-bottom:2px;}
+.cal-shift-dot{width:5px;height:5px;border-radius:50%;flex-shrink:0;}
+.cal-day-total{font-size:9px;color:var(--accent);font-family:'Bebas Neue';line-height:1.3;}
+/* Template chips */
+.tpl-chip{display:flex;align-items:center;gap:10px;padding:11px 14px;background:var(--surface);border:1px solid var(--border);border-radius:12px;margin-bottom:8px;}
+.tpl-chip.tappable{cursor:pointer;transition:all 0.15s;}
+.tpl-chip.tappable:hover{border-color:var(--accent);background:var(--surface2);}
+.tpl-chip-info{flex:1;}
+.tpl-chip-name{font-size:13px;font-weight:500;}
+.tpl-chip-detail{font-size:11px;color:var(--text-sub);margin-top:2px;}
+.tpl-chip-amt{font-family:'Bebas Neue';font-size:18px;color:var(--accent);white-space:nowrap;}
+/* Tab switcher */
+.tab-sw{display:flex;background:var(--surface2);border-radius:10px;padding:3px;margin-bottom:16px;gap:3px;}
+.tab-sw-btn{flex:1;padding:8px;border:none;background:transparent;color:var(--text-sub);border-radius:8px;cursor:pointer;font-family:'Zen Kaku Gothic New',sans-serif;font-size:13px;transition:all 0.15s;}
+.tab-sw-btn.active{background:var(--surface3);color:var(--text);}
+
+/* ── JOB PANEL BUTTONS ──────────────── */
+.job-panel-btn{padding:12px 14px;background:var(--surface2);border:1px solid var(--border);border-radius:12px;text-align:left;cursor:pointer;transition:all 0.15s;width:100%;}
+.job-panel-btn:hover{border-color:var(--accent);}
+.job-panel-btn.selected{background:rgba(200,240,96,0.1);border-color:var(--accent);}
+.job-panel-btn .jp-name{font-size:13px;color:var(--text);display:flex;align-items:center;gap:8px;margin-bottom:4px;}
+.job-panel-btn.selected .jp-name{color:var(--accent);font-weight:600;}
+.job-panel-btn .jp-wage{font-family:'Bebas Neue';font-size:20px;color:var(--text-sub);}
+.job-panel-btn.selected .jp-wage{color:var(--accent);}
+
+/* ── DRUM ROLL ──────────────────────── */
+.drum-wrap{position:relative;height:120px;overflow:hidden;border-radius:10px;background:var(--surface2);border:1px solid var(--border);}
+.drum-line{position:absolute;top:50%;left:0;right:0;height:40px;transform:translateY(-50%);border-top:1px solid var(--border);border-bottom:1px solid var(--border);pointer-events:none;z-index:1;}
+.drum-fade-top,.drum-fade-bottom{position:absolute;left:0;right:0;height:44px;pointer-events:none;z-index:2;}
+.drum-fade-top{top:0;background:linear-gradient(to bottom,var(--surface2) 20%,transparent);}
+.drum-fade-bottom{bottom:0;background:linear-gradient(to top,var(--surface2) 20%,transparent);}
+.drum-scroll{height:100%;overflow-y:scroll;scroll-snap-type:y mandatory;-webkit-overflow-scrolling:touch;scrollbar-width:none;}
+.drum-scroll::-webkit-scrollbar{display:none;}
+.drum-scroll::before,.drum-scroll::after{content:'';display:block;height:40px;flex-shrink:0;}
+.drum-item{height:40px;display:flex;align-items:center;justify-content:center;scroll-snap-align:center;font-size:14px;color:var(--text-dim);transition:all 0.15s;user-select:none;}
+.drum-item.active{color:var(--white);font-size:17px;font-weight:600;}
+
+/* ── CALCULATOR MODAL ───────────────── */
+.calc-display{background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:14px 16px;font-family:'Bebas Neue',sans-serif;font-size:38px;text-align:right;color:var(--white);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;margin-bottom:4px;letter-spacing:1px;}
+.calc-keys{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;}
+.calc-key{background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:16px 8px;font-size:18px;color:var(--text);cursor:pointer;font-family:'Zen Kaku Gothic New',sans-serif;transition:background 0.1s;-webkit-tap-highlight-color:transparent;}
+.calc-key:active{background:var(--surface3);}
+.calc-key-fn{color:var(--text-sub);font-size:14px;}
+.calc-key-op{color:var(--accent);font-weight:700;}
+.calc-key-eq{background:var(--accent);color:#0e0f13;font-weight:700;border-color:var(--accent);}
+.calc-key-eq:active{background:#d9f577;}
+.calc-key-zero{grid-column:span 2;}
+
 @media(max-width:540px){
   .hero-grid{grid-template-columns:1fr;}
   .frow,.detail-grid,.cjr-fields{grid-template-columns:1fr;}
@@ -302,28 +362,44 @@ canvas{width:100%!important;}
 
     <!-- ═══════════════ INPUT ═══════════════ -->
     <div class="screen" id="screen-input">
-      <div style="margin-bottom:20px;">
-        <div class="page-label">勤怠入力</div>
-        <div style="font-size:26px;font-family:'Bebas Neue';color:var(--white);letter-spacing:2px;">新規シフト登録</div>
+
+      <!-- バイト先パネル -->
+      <div class="fgroup">
+        <label class="flabel">バイト先</label>
+        <input type="hidden" id="inp-job">
+        <div id="inp-job-panels" style="display:grid;grid-template-columns:1fr 1fr;gap:8px;"></div>
       </div>
 
-      <div class="fgroup"><label class="flabel">バイト先</label><select class="fselect" id="inp-job" onchange="calcPreview()"><option value="">選択してください</option></select></div>
+      <!-- 勤務日 -->
       <div class="fgroup"><label class="flabel">勤務日</label><input type="date" class="finput" id="inp-date" onchange="calcPreview()"></div>
+
+      <!-- 出退勤時刻 -->
       <div class="frow">
         <div class="fgroup"><label class="flabel">出勤時刻</label><input type="time" class="finput" id="inp-start" onchange="calcPreview()"></div>
         <div class="fgroup"><label class="flabel">退勤時刻</label><input type="time" class="finput" id="inp-end" onchange="calcPreview()"></div>
       </div>
-      <div class="fgroup"><label class="flabel">休憩（分）</label><input type="number" class="finput" id="inp-break" value="0" min="0" step="15" onchange="calcPreview()"></div>
-      <div class="fgroup"><label class="flabel">メモ（任意）</label><input type="text" class="finput" id="inp-memo" placeholder="例：早番、繁忙期など"></div>
 
+      <!-- 休憩ドラムロール -->
+      <div class="fgroup">
+        <label class="flabel">休憩時間</label>
+        <div class="drum-wrap">
+          <div class="drum-line"></div>
+          <div class="drum-fade-top"></div>
+          <div class="drum-fade-bottom"></div>
+          <div class="drum-scroll" id="drum-break"></div>
+        </div>
+        <input type="hidden" id="inp-break" value="0">
+      </div>
+
+      <!-- 計算プレビュー（合計を最上部に） -->
       <div class="sec-title">計算プレビュー</div>
       <div class="calc-box">
+        <div class="calc-row ttl"><span class="lbl">この日の合計</span><span class="val" id="pv-total">¥--</span></div>
         <div class="calc-row"><span class="lbl">勤務時間</span><span class="val" id="pv-hours">--</span></div>
         <div class="calc-row"><span class="lbl">適用時給</span><span class="val" id="pv-wage">¥--</span></div>
         <div class="calc-row"><span class="lbl">基本給</span><span class="val" id="pv-base">¥--</span></div>
         <div class="calc-row"><span class="lbl">割増（土日祝 / 深夜 / 残業）</span><span class="val" id="pv-extra">¥--</span></div>
         <div class="calc-row"><span class="lbl">交通費</span><span class="val" id="pv-transport">¥--</span></div>
-        <div class="calc-row ttl"><span class="lbl">この日の合計</span><span class="val" id="pv-total">¥--</span></div>
       </div>
       <div class="breakdown-note" id="pv-breakdown"></div>
 
@@ -412,6 +488,63 @@ canvas{width:100%!important;}
       </div>
     </div>
 
+    <!-- ═══════════════ PLAN ═══════════════ -->
+    <div class="screen" id="screen-plan">
+      <div style="margin-bottom:16px;">
+        <div class="page-label">シフト計画</div>
+        <div class="month-nav">
+          <button class="mnav-btn" onclick="changePlanMonth(-1)"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="15 18 9 12 15 6"/></svg></button>
+          <div class="month-label" id="plan-month-label">---</div>
+          <button class="mnav-btn" onclick="changePlanMonth(1)"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"/></svg></button>
+        </div>
+      </div>
+
+      <!-- 月間サマリー -->
+      <div class="card" style="padding:16px 20px;margin-bottom:12px;">
+        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;text-align:center;">
+          <div style="border-right:1px solid var(--border);padding:0 8px;">
+            <div style="font-size:10px;color:var(--text-sub);letter-spacing:1px;margin-bottom:4px;">シフト日数</div>
+            <div id="plan-days" style="font-family:'Bebas Neue';font-size:32px;color:var(--white);line-height:1;">0</div>
+            <div style="font-size:10px;color:var(--text-sub);">日</div>
+          </div>
+          <div style="border-right:1px solid var(--border);padding:0 8px;">
+            <div style="font-size:10px;color:var(--text-sub);letter-spacing:1px;margin-bottom:4px;">合計時間</div>
+            <div id="plan-hours" style="font-family:'Bebas Neue';font-size:32px;color:var(--white);line-height:1;">0</div>
+            <div style="font-size:10px;color:var(--text-sub);">時間</div>
+          </div>
+          <div style="padding:0 8px;">
+            <div style="font-size:10px;color:var(--text-sub);letter-spacing:1px;margin-bottom:4px;">見込み給与</div>
+            <div id="plan-total" style="font-family:'Bebas Neue';font-size:26px;color:var(--accent);line-height:1;">¥0</div>
+            <div style="font-size:10px;color:var(--text-sub);">（税込）</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- カレンダー -->
+      <div class="card" style="padding:12px;margin-bottom:16px;">
+        <div class="cal-grid" style="margin-bottom:4px;">
+          <div class="cal-head-cell" style="color:var(--red)">日</div>
+          <div class="cal-head-cell">月</div>
+          <div class="cal-head-cell">火</div>
+          <div class="cal-head-cell">水</div>
+          <div class="cal-head-cell">木</div>
+          <div class="cal-head-cell">金</div>
+          <div class="cal-head-cell" style="color:var(--accent2)">土</div>
+        </div>
+        <div class="cal-grid" id="plan-calendar"></div>
+      </div>
+
+      <!-- テンプレート -->
+      <div style="display:flex;align-items:center;justify-content:space-between;margin:4px 0 12px;">
+        <div style="font-size:11px;letter-spacing:3px;color:var(--text-sub);text-transform:uppercase;">テンプレート</div>
+        <button class="btn btn-outline" style="font-size:12px;padding:6px 12px;" onclick="openAddTemplateModal()">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          追加
+        </button>
+      </div>
+      <div id="plan-template-list"></div>
+    </div>
+
   </main>
 
   <!-- BOTTOM NAV -->
@@ -424,11 +557,46 @@ canvas{width:100%!important;}
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg>
       入力
     </button>
+    <button class="nav-btn" id="nav-plan" onclick="showScreen('plan')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+      シフト計画
+    </button>
     <button class="nav-btn" id="nav-settings" onclick="showScreen('settings')">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/></svg>
       設定
     </button>
   </nav>
+</div>
+
+<!-- ── MODAL: 電卓 ── -->
+<div class="overlay" id="overlay-calc">
+  <div class="modal" style="padding:20px;">
+    <div class="modal-drag"></div>
+    <div style="font-size:10px;letter-spacing:2px;color:var(--text-sub);text-transform:uppercase;margin-bottom:8px;" id="calc-field-label">金額入力</div>
+    <div class="calc-display" id="calc-display">0</div>
+    <div style="font-size:11px;color:var(--text-sub);text-align:right;min-height:18px;margin-bottom:12px;font-family:'Bebas Neue';letter-spacing:1px;" id="calc-expr"></div>
+    <div class="calc-keys">
+      <button class="calc-key calc-key-fn" onclick="calcKey('AC')">AC</button>
+      <button class="calc-key calc-key-fn" onclick="calcKey('←')">←</button>
+      <button class="calc-key calc-key-fn" onclick="calcKey('%')">%</button>
+      <button class="calc-key calc-key-op" onclick="calcKey('÷')">÷</button>
+      <button class="calc-key" onclick="calcKey('7')">7</button>
+      <button class="calc-key" onclick="calcKey('8')">8</button>
+      <button class="calc-key" onclick="calcKey('9')">9</button>
+      <button class="calc-key calc-key-op" onclick="calcKey('×')">×</button>
+      <button class="calc-key" onclick="calcKey('4')">4</button>
+      <button class="calc-key" onclick="calcKey('5')">5</button>
+      <button class="calc-key" onclick="calcKey('6')">6</button>
+      <button class="calc-key calc-key-op" onclick="calcKey('−')">−</button>
+      <button class="calc-key" onclick="calcKey('1')">1</button>
+      <button class="calc-key" onclick="calcKey('2')">2</button>
+      <button class="calc-key" onclick="calcKey('3')">3</button>
+      <button class="calc-key calc-key-op" onclick="calcKey('+')">+</button>
+      <button class="calc-key calc-key-zero" onclick="calcKey('0')">0</button>
+      <button class="calc-key" onclick="calcKey('.')">.</button>
+      <button class="calc-key calc-key-eq" onclick="calcKey('=')">OK</button>
+    </div>
+  </div>
 </div>
 
 <!-- ── MODAL: バイト先追加 ── -->
@@ -442,6 +610,62 @@ canvas{width:100%!important;}
     <div class="modal-actions">
       <button class="btn btn-outline" onclick="closeOverlay('overlay-add-job')">キャンセル</button>
       <button class="btn btn-primary" style="margin:0;" onclick="addJob()">追加する</button>
+    </div>
+  </div>
+</div>
+
+<!-- ── MODAL: 日別シフト追加 ── -->
+<div class="overlay" id="overlay-day-shift">
+  <div class="modal">
+    <div class="modal-drag"></div>
+    <div class="modal-title" id="day-shift-title">シフト追加</div>
+    <!-- 既存シフト -->
+    <div id="day-existing-shifts"></div>
+    <!-- タブ切替 -->
+    <div class="tab-sw">
+      <button class="tab-sw-btn active" id="tab-btn-detail" onclick="switchShiftTab('detail')">詳細入力</button>
+      <button class="tab-sw-btn" id="tab-btn-tpl" onclick="switchShiftTab('tpl')">テンプレート</button>
+    </div>
+    <!-- 詳細入力フォーム -->
+    <div id="shift-form-detail">
+      <div class="fgroup"><label class="flabel">バイト先</label><select class="fselect" id="ds-job" onchange="dsDayPreview()"><option value="">選択してください</option></select></div>
+      <div class="frow">
+        <div class="fgroup"><label class="flabel">出勤時刻</label><input type="time" class="finput" id="ds-start" onchange="dsDayPreview()"></div>
+        <div class="fgroup"><label class="flabel">退勤時刻</label><input type="time" class="finput" id="ds-end" onchange="dsDayPreview()"></div>
+      </div>
+      <div class="fgroup"><label class="flabel">休憩（分）</label><input type="number" class="finput" id="ds-break" value="0" min="0" step="15" onchange="dsDayPreview()"></div>
+      <div id="ds-preview"></div>
+      <div class="modal-actions">
+        <button class="btn btn-outline" onclick="closeOverlay('overlay-day-shift')">閉じる</button>
+        <button class="btn btn-primary" style="margin:0;" onclick="saveDayShift()">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+          追加する
+        </button>
+      </div>
+    </div>
+    <!-- テンプレート選択 -->
+    <div id="shift-form-tpl" style="display:none;">
+      <div id="tpl-select-list"></div>
+      <button class="btn btn-outline" style="width:100%;margin-top:8px;" onclick="closeOverlay('overlay-day-shift')">閉じる</button>
+    </div>
+  </div>
+</div>
+
+<!-- ── MODAL: テンプレート追加 ── -->
+<div class="overlay" id="overlay-add-tpl">
+  <div class="modal">
+    <div class="modal-drag"></div>
+    <div class="modal-title">テンプレートを追加</div>
+    <div class="fgroup"><label class="flabel">テンプレート名</label><input type="text" class="finput" id="tpl-name" placeholder="例: 早番・遅番など"></div>
+    <div class="fgroup"><label class="flabel">バイト先</label><select class="fselect" id="tpl-job"><option value="">選択してください</option></select></div>
+    <div class="frow">
+      <div class="fgroup"><label class="flabel">出勤時刻</label><input type="time" class="finput" id="tpl-start"></div>
+      <div class="fgroup"><label class="flabel">退勤時刻</label><input type="time" class="finput" id="tpl-end"></div>
+    </div>
+    <div class="fgroup"><label class="flabel">休憩（分）</label><input type="number" class="finput" id="tpl-break" value="0" min="0" step="15"></div>
+    <div class="modal-actions">
+      <button class="btn btn-outline" onclick="closeOverlay('overlay-add-tpl')">キャンセル</button>
+      <button class="btn btn-primary" style="margin:0;" onclick="saveTemplate()">保存する</button>
     </div>
   </div>
 </div>
@@ -469,6 +693,8 @@ let state = {
   history:[],
   fuyoLimit: 1030000,
   viewMonth:null,
+  planViewMonth:null,
+  shiftTemplates:[],
 };
 
 let confirmTarget = null; // {year,month}
@@ -487,10 +713,12 @@ function applyLoaded(raw){
 function bootUI(){
   const now = new Date();
   state.viewMonth = {year:now.getFullYear(), month:now.getMonth()+1};
+  state.planViewMonth = {year:now.getFullYear(), month:now.getMonth()+1};
   document.getElementById('inp-date').value = now.toISOString().split('T')[0];
   const fi = document.getElementById('fuyo-limit-input');
   if(fi) fi.value = state.fuyoLimit ?? 1030000;
   updateJobSelector();
+  initDrumRoll();
   renderAll();
 }
 function init(){
@@ -508,6 +736,7 @@ function init(){
       get.onsuccess = () => {
         if(get.result && (!lsRaw || get.result.length >= lsRaw.length)){
           applyLoaded(get.result);
+          if(!state.shiftTemplates) state.shiftTemplates=[];
           bootUI();
         }
       };
@@ -565,6 +794,7 @@ function importData(input){
       if(p.shifts)  state.shifts  = p.shifts;
       if(p.history) state.history = p.history;
       if(p.fuyoLimit != null) state.fuyoLimit = p.fuyoLimit;
+      if(p.shiftTemplates) state.shiftTemplates = p.shiftTemplates;
       save(); renderAll();
       const fi = document.getElementById('fuyo-limit-input');
       if(fi) fi.value = state.fuyoLimit ?? 1030000;
@@ -585,7 +815,8 @@ function showScreen(name){
   document.querySelectorAll('.nav-btn').forEach(b=>b.classList.remove('active'));
   document.getElementById('screen-'+name).classList.add('active');
   document.getElementById('nav-'+name).classList.add('active');
-  if(name==='input')    renderShiftList();
+  if(name==='input'){   renderShiftList(); initDrumRoll(); }
+  if(name==='plan')     renderPlan();
   if(name==='settings'){
     renderJobSettings();
     populateConfirmMonthSel();
@@ -786,18 +1017,28 @@ function renderFuyo(displayYear){
   const labelEl = document.getElementById('fuyo-card-label');
   if(labelEl) labelEl.textContent = `扶養ライン（${limitLabel}）`;
 
-  // 今年度の課税合計 (前年12月 + 今年1〜11月 の確定分のみ。12月は翌年振込なので除外)
-  // ※ displayYear に振り込まれる給与 = displayYear-1年12月 + displayYear年1〜11月
+  // 今年度の課税合計 (前年12月 + 今年1〜11月)
+  // 確定済みの月は taxable を使用、未確定でシフトがある月は見込み(base+extra)で合算
   let taxSoFar = 0;
+  let hasEstimate = false;
   // 前年12月
   const prevDec2 = state.history.find(h=>h.year===displayYear-1&&h.month===12);
-  if(prevDec2) (prevDec2.entries||[]).forEach(e=>{ taxSoFar+=(e.taxable||0); });
-  // 今年1〜11月（12月は除外）
-  state.history.forEach(h=>{
-    if(h.year!==displayYear) return;
-    if(h.month===12) return; // 12月分は翌年振込なので除外
-    (h.entries||[]).forEach(e=>{ taxSoFar+=(e.taxable||0); });
-  });
+  if(prevDec2){
+    (prevDec2.entries||[]).forEach(e=>{ taxSoFar+=(e.taxable||0); });
+  } else {
+    const est=monthCalc(displayYear-1,12);
+    if(est.days>0){ taxSoFar+=est.base+est.extra; hasEstimate=true; }
+  }
+  // 今年1〜11月（12月は翌年振込なので除外）
+  for(let m=1;m<=11;m++){
+    const hist=state.history.find(h=>h.year===displayYear&&h.month===m);
+    if(hist){
+      (hist.entries||[]).forEach(e=>{ taxSoFar+=(e.taxable||0); });
+    } else {
+      const est=monthCalc(displayYear,m);
+      if(est.days>0){ taxSoFar+=est.base+est.extra; hasEstimate=true; }
+    }
+  }
 
   const remain = Math.max(0, LIMIT - taxSoFar);
   const pct    = Math.min(100, (taxSoFar / LIMIT) * 100);
@@ -829,7 +1070,7 @@ function renderFuyo(displayYear){
   document.getElementById('fuyo-remain').style.color   = over ? 'var(--red)' : remain < 100000 ? 'var(--orange)' : 'var(--white)';
   document.getElementById('fuyo-remain-sub').textContent = over
     ? `¥ ${(taxSoFar - LIMIT).toLocaleString()} オーバー`
-    : `課税収入 ¥ ${taxSoFar.toLocaleString()}`;
+    : `課税収入 ¥ ${taxSoFar.toLocaleString()}${hasEstimate?' (見込み含む)':''}`;
 
   document.getElementById('fuyo-monthly').textContent   = over ? '---' : remainMonths > 0 ? `¥ ${monthlyLimit.toLocaleString()}` : '---';
   document.getElementById('fuyo-monthly').style.color   = over ? 'var(--red)' : monthlyLimit < 50000 && monthlyLimit > 0 ? 'var(--orange)' : 'var(--white)';
@@ -842,7 +1083,7 @@ function renderFuyo(displayYear){
   document.getElementById('fuyo-progress-label').textContent = `¥ ${taxSoFar.toLocaleString()} / ¥ ${LIMIT.toLocaleString()}`;
   document.getElementById('fuyo-bar').style.width    = pct + '%';
   document.getElementById('fuyo-bar').style.background = over ? 'var(--red)' : pct > 80 ? 'var(--orange)' : 'var(--accent)';
-  document.getElementById('fuyo-note').textContent   = `※ 課税収入のみ集計。12月勤務分（翌年1月振込）は除外。確定済みデータで計算。`;
+  document.getElementById('fuyo-note').textContent   = `※ 課税収入のみ集計。12月勤務分（翌年1月振込）は除外。確定済み＋シフト見込み（交通費除く）で計算。`;
 }
 
 function renderHistory(){
@@ -985,11 +1226,21 @@ function renderConfirmForm(){
       <div class="cjr-fields">
         <div class="cjr-field">
           <label>課税給与（円）<span class="tag taxable-tag">課税</span></label>
-          <input type="number" class="finput" id="cfs-tax-${job.id}" value="${prevTax}" min="0" placeholder="0">
+          <div style="display:flex;gap:6px;">
+            <input type="number" class="finput" id="cfs-tax-${job.id}" value="${prevTax}" min="0" placeholder="0" style="flex:1;">
+            <button onclick="openCalc('cfs-tax-${job.id}','${job.name} 課税給与')" style="background:var(--surface3);border:1px solid var(--border);border-radius:10px;padding:0 10px;color:var(--text-sub);cursor:pointer;flex-shrink:0;" title="電卓">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="2" width="16" height="20" rx="2"/><line x1="8" y1="7" x2="16" y2="7"/><line x1="8" y1="12" x2="10" y2="12"/><line x1="14" y1="12" x2="16" y2="12"/><line x1="8" y1="17" x2="10" y2="17"/><line x1="14" y1="17" x2="16" y2="17"/></svg>
+            </button>
+          </div>
         </div>
         <div class="cjr-field">
           <label>非課税給与（円）<span class="tag nontax-tag">非課税</span></label>
-          <input type="number" class="finput" id="cfs-non-${job.id}" value="${prevNon}" min="0" placeholder="0">
+          <div style="display:flex;gap:6px;">
+            <input type="number" class="finput" id="cfs-non-${job.id}" value="${prevNon}" min="0" placeholder="0" style="flex:1;">
+            <button onclick="openCalc('cfs-non-${job.id}','${job.name} 非課税給与')" style="background:var(--surface3);border:1px solid var(--border);border-radius:10px;padding:0 10px;color:var(--text-sub);cursor:pointer;flex-shrink:0;" title="電卓">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="2" width="16" height="20" rx="2"/><line x1="8" y1="7" x2="16" y2="7"/><line x1="8" y1="12" x2="10" y2="12"/><line x1="14" y1="12" x2="16" y2="12"/><line x1="8" y1="17" x2="10" y2="17"/><line x1="14" y1="17" x2="16" y2="17"/></svg>
+            </button>
+          </div>
         </div>
       </div>
     </div>`;
@@ -1046,12 +1297,14 @@ function saveShift(){
   const start=document.getElementById('inp-start').value;
   const end=document.getElementById('inp-end').value;
   const breakMin=parseInt(document.getElementById('inp-break').value)||0;
-  const memo=document.getElementById('inp-memo').value;
   if(!jobId||!date||!start||!end){ showToast('⚠ 全ての必須項目を入力してください','⚠'); return; }
-  state.shifts.push({id:Date.now().toString(),jobId,date,start,end,breakMin,memo});
-  save(); renderShiftList(); renderHome();
+  state.shifts.push({id:Date.now().toString(),jobId,date,start,end,breakMin,memo:''});
+  save(); renderShiftList(); renderHome(); renderPlan();
   showToast('シフトを登録しました ✓');
-  document.getElementById('inp-memo').value=''; document.getElementById('inp-break').value='0'; calcPreview();
+  document.getElementById('inp-job').value='';
+  renderJobPanels('');
+  setDrumValue(0);
+  calcPreview();
 }
 
 function deleteShift(id){
@@ -1084,8 +1337,29 @@ function renderShiftList(){
 }
 
 function updateJobSelector(){
-  const sel=document.getElementById('inp-job'),cur=sel.value;
-  sel.innerHTML='<option value="">選択してください</option>'+state.jobs.map(j=>`<option value="${j.id}" ${cur===j.id?'selected':''}>${j.name} (¥${j.wage})</option>`).join('');
+  const cur = document.getElementById('inp-job')?.value || '';
+  renderJobPanels(cur);
+}
+function renderJobPanels(selectedId){
+  const c = document.getElementById('inp-job-panels');
+  if(!c) return;
+  if(!state.jobs.length){
+    c.innerHTML = '<div style="padding:16px;color:var(--text-sub);font-size:13px;text-align:center;background:var(--surface2);border-radius:10px;border:1px solid var(--border);grid-column:span 2;">バイト先が登録されていません</div>';
+    return;
+  }
+  c.innerHTML = state.jobs.map(j => {
+    const sel = j.id === selectedId;
+    return `<button class="job-panel-btn${sel?' selected':''}" onclick="selectJobPanel('${j.id}')">
+      <div class="jp-name"><div style="width:8px;height:8px;border-radius:50%;background:${j.color};flex-shrink:0;"></div>${j.name}</div>
+      <div class="jp-wage">¥${j.wage.toLocaleString()}/h</div>
+    </button>`;
+  }).join('');
+}
+function selectJobPanel(jobId){
+  const inp = document.getElementById('inp-job');
+  if(inp) inp.value = jobId;
+  renderJobPanels(jobId);
+  calcPreview();
 }
 
 // ═══════════════════════════════════════════════
@@ -1230,9 +1504,378 @@ function showToast(msg,icon='✓'){
 }
 
 // ═══════════════════════════════════════════════
+// DRUM ROLL (休憩時間ピッカー)
+// ═══════════════════════════════════════════════
+const BREAK_OPTIONS = [0,15,30,45,60,75,90,105,120];
+const DRUM_ITEM_H   = 40;
+let drumReady = false;
+
+function initDrumRoll(){
+  const drum = document.getElementById('drum-break');
+  if(!drum) return;
+  if(drumReady) return;
+  drum.innerHTML = BREAK_OPTIONS.map((v,i) =>
+    `<div class="drum-item${i===0?' active':''}">${v}分</div>`
+  ).join('');
+  drum.scrollTop = 0;
+  let timer;
+  drum.addEventListener('scroll', () => {
+    clearTimeout(timer);
+    timer = setTimeout(() => snapDrumBreak(), 80);
+  }, {passive:true});
+  drumReady = true;
+}
+
+function snapDrumBreak(){
+  const drum = document.getElementById('drum-break');
+  if(!drum) return;
+  const raw = drum.scrollTop / DRUM_ITEM_H;
+  const idx = Math.max(0, Math.min(BREAK_OPTIONS.length - 1, Math.round(raw)));
+  drum.scrollTo({top: idx * DRUM_ITEM_H, behavior:'smooth'});
+  drum.querySelectorAll('.drum-item').forEach((el,i) => el.classList.toggle('active', i===idx));
+  document.getElementById('inp-break').value = BREAK_OPTIONS[idx];
+  calcPreview();
+}
+
+function setDrumValue(val){
+  const drum = document.getElementById('drum-break');
+  if(!drum) return;
+  const idx = BREAK_OPTIONS.indexOf(val);
+  if(idx < 0) return;
+  drum.scrollTo({top: idx * DRUM_ITEM_H, behavior:'smooth'});
+  drum.querySelectorAll('.drum-item').forEach((el,i) => el.classList.toggle('active', i===idx));
+  document.getElementById('inp-break').value = val;
+}
+
+// ═══════════════════════════════════════════════
+// CALCULATOR
+// ═══════════════════════════════════════════════
+let calcTargetId = null;
+let calcCurrent  = '0';
+let calcExprStr  = '';
+let calcEvaled   = false;
+
+function openCalc(inputId, label){
+  calcTargetId = inputId;
+  const el = document.getElementById(inputId);
+  calcCurrent = el?.value || '0';
+  calcExprStr = '';
+  calcEvaled  = false;
+  document.getElementById('calc-field-label').textContent = label || '金額';
+  document.getElementById('calc-display').textContent = calcCurrent;
+  document.getElementById('calc-expr').textContent = '';
+  openOverlay('overlay-calc');
+}
+
+function calcKey(k){
+  if(k === 'AC'){
+    calcCurrent = '0'; calcExprStr = ''; calcEvaled = false;
+  } else if(k === '←'){
+    if(calcEvaled){ calcCurrent='0'; calcExprStr=''; calcEvaled=false; }
+    else calcCurrent = calcCurrent.length > 1 ? calcCurrent.slice(0,-1) : '0';
+  } else if(k === '='){
+    try{
+      const full = calcExprStr + calcCurrent;
+      const safe = full.replace(/÷/g,'/').replace(/×/g,'*').replace(/−/g,'-');
+      const r = Function('"use strict";return(' + safe + ')')();
+      if(!isFinite(r)) throw 0;
+      calcCurrent = String(Math.round(r));
+      calcExprStr = '';
+      calcEvaled  = true;
+      const el = document.getElementById(calcTargetId);
+      if(el) el.value = calcCurrent;
+      document.getElementById('calc-display').textContent = Number(calcCurrent).toLocaleString();
+      document.getElementById('calc-expr').textContent = '';
+      closeOverlay('overlay-calc');
+      return;
+    } catch(e){ calcCurrent = 'エラー'; calcEvaled = true; }
+  } else if(['+','−','×','÷'].includes(k)){
+    if(calcEvaled) calcEvaled = false;
+    calcExprStr += calcCurrent + k;
+    calcCurrent = '0';
+  } else if(k === '%'){
+    const v = parseFloat(calcCurrent);
+    calcCurrent = isNaN(v) ? '0' : String(Math.round(v / 100 * 100) / 100);
+  } else {
+    if(calcEvaled){ calcCurrent='0'; calcExprStr=''; calcEvaled=false; }
+    if(k === '.' && calcCurrent.includes('.')) return;
+    calcCurrent = (calcCurrent === '0' && k !== '.') ? k : calcCurrent + k;
+  }
+  document.getElementById('calc-display').textContent = calcCurrent;
+  document.getElementById('calc-expr').textContent = calcExprStr;
+}
+
+// ═══════════════════════════════════════════════
+// PLAN (シフト計画カレンダー)
+// ═══════════════════════════════════════════════
+let planModalDate = null;
+
+function changePlanMonth(d){
+  if(!state.planViewMonth) return;
+  let {year,month} = state.planViewMonth;
+  month += d;
+  if(month > 12){ month = 1; year++; }
+  if(month < 1){ month = 12; year--; }
+  state.planViewMonth = {year, month};
+  renderPlan();
+}
+
+function renderPlan(){
+  if(!state.planViewMonth) return;
+  const {year, month} = state.planViewMonth;
+  const label = document.getElementById('plan-month-label');
+  if(label) label.textContent = `${year}年 ${month}月`;
+  // サマリー
+  const t = monthCalc(year, month);
+  const pd = document.getElementById('plan-days');
+  const ph = document.getElementById('plan-hours');
+  const pt = document.getElementById('plan-total');
+  if(pd) pd.textContent = t.days;
+  if(ph) ph.textContent = Math.floor(t.hours);
+  if(pt) pt.textContent = '¥' + t.total.toLocaleString();
+  renderPlanCalendar(year, month);
+  renderTemplateList();
+}
+
+function renderPlanCalendar(year, month){
+  const cal = document.getElementById('plan-calendar');
+  if(!cal) return;
+  const now = new Date();
+  const todayStr = now.toISOString().split('T')[0];
+  const firstDow = new Date(year, month - 1, 1).getDay(); // 0=Sun
+  const daysInMonth = new Date(year, month, 0).getDate();
+  const fmt2 = n => String(n).padStart(2, '0');
+
+  // 日→シフト一覧マップ
+  const shiftsThisMonth = monthShifts(year, month);
+  const dayMap = {};
+  shiftsThisMonth.forEach(s => {
+    const d = parseInt(s.date.split('-')[2]);
+    if(!dayMap[d]) dayMap[d] = [];
+    dayMap[d].push(s);
+  });
+
+  let html = '';
+  for(let i = 0; i < firstDow; i++) html += '<div class="cal-cell empty"></div>';
+
+  for(let d = 1; d <= daysInMonth; d++){
+    const dateStr = `${year}-${fmt2(month)}-${fmt2(d)}`;
+    const dow = new Date(dateStr + 'T00:00:00').getDay();
+    const isToday = dateStr === todayStr;
+    const isSun = dow === 0;
+    const isSat = dow === 6;
+    const isHol = isHoliday(dateStr);
+    let cls = 'cal-cell';
+    if(isToday) cls += ' today';
+    if((isSun || isHol) && !isSat) cls += ' sun';
+    else if(isSat) cls += ' sat';
+    if(isHol && !isSun) cls += ' hol';
+
+    const dayShifts = dayMap[d] || [];
+    let dots = '', dayTotal = 0;
+    dayShifts.forEach(s => {
+      const job = state.jobs.find(j => j.id === s.jobId);
+      const p = calcShift(s);
+      dayTotal += p.total;
+      dots += `<div class="cal-shift-dot" style="background:${job?.color||'#888'}"></div>`;
+    });
+
+    html += `<div class="${cls}" onclick="openDayModal('${dateStr}')">
+      <div class="cal-num">${d}</div>
+      <div class="cal-shift-dots">${dots}</div>
+      ${dayTotal > 0 ? `<div class="cal-day-total">¥${(dayTotal/1000).toFixed(1)}k</div>` : ''}
+    </div>`;
+  }
+  cal.innerHTML = html;
+}
+
+// ── 日別モーダル ──
+function openDayModal(dateStr){
+  planModalDate = dateStr;
+  const [y, m, d] = dateStr.split('-').map(Number);
+  const dowNames = ['日','月','火','水','木','金','土'];
+  const dow = dowNames[new Date(dateStr + 'T00:00:00').getDay()];
+  const titleEl = document.getElementById('day-shift-title');
+  if(titleEl) titleEl.textContent = `${m}月${d}日（${dow}） シフト追加`;
+
+  // バイト先セレクタ更新
+  const sel = document.getElementById('ds-job');
+  sel.innerHTML = '<option value="">選択してください</option>' + state.jobs.map(j => `<option value="${j.id}">${j.name} (¥${j.wage})</option>`).join('');
+
+  // フォームリセット
+  document.getElementById('ds-start').value = '';
+  document.getElementById('ds-end').value = '';
+  document.getElementById('ds-break').value = '0';
+  document.getElementById('ds-preview').innerHTML = '';
+
+  switchShiftTab('detail');
+  renderDayExistingShifts(dateStr);
+  renderTplSelectList();
+  openOverlay('overlay-day-shift');
+}
+
+function renderDayExistingShifts(dateStr){
+  const area = document.getElementById('day-existing-shifts');
+  if(!area) return;
+  const existing = state.shifts.filter(s => s.date === dateStr);
+  if(!existing.length){ area.innerHTML = ''; return; }
+  area.innerHTML = `<div style="margin-bottom:14px;">
+    <div style="font-size:10px;letter-spacing:1px;color:var(--text-sub);margin-bottom:8px;text-transform:uppercase;">登録済みシフト</div>
+    ${existing.map(s => {
+      const job = state.jobs.find(j => j.id === s.jobId);
+      const p = calcShift(s);
+      return `<div style="display:flex;align-items:center;gap:10px;padding:9px 12px;background:var(--surface2);border:1px solid var(--border);border-radius:10px;margin-bottom:6px;">
+        <div style="width:7px;height:7px;border-radius:50%;background:${job?.color||'#888'};flex-shrink:0;"></div>
+        <div style="flex:1;font-size:12px;">${job?.name||'不明'}&ensp;${s.start}〜${s.end}${s.breakMin>0?' 休'+s.breakMin+'分':''}</div>
+        <div style="font-family:'Bebas Neue';font-size:16px;color:var(--accent);">¥${p.total.toLocaleString()}</div>
+        <button onclick="deletePlanShift('${s.id}')" style="background:transparent;border:none;color:var(--red);cursor:pointer;padding:2px 4px;display:flex;">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+        </button>
+      </div>`;
+    }).join('')}
+  </div>`;
+}
+
+function deletePlanShift(id){
+  state.shifts = state.shifts.filter(s => s.id !== id);
+  save(); renderPlan(); renderHome(); renderShiftList();
+  renderDayExistingShifts(planModalDate);
+  showToast('シフトを削除しました', '🗑');
+}
+
+function switchShiftTab(tab){
+  const isDetail = tab === 'detail';
+  document.getElementById('tab-btn-detail').classList.toggle('active', isDetail);
+  document.getElementById('tab-btn-tpl').classList.toggle('active', !isDetail);
+  document.getElementById('shift-form-detail').style.display = isDetail ? '' : 'none';
+  document.getElementById('shift-form-tpl').style.display = isDetail ? 'none' : '';
+}
+
+function dsDayPreview(){
+  const jobId = document.getElementById('ds-job').value;
+  const start = document.getElementById('ds-start').value;
+  const end   = document.getElementById('ds-end').value;
+  const breakMin = parseInt(document.getElementById('ds-break').value) || 0;
+  const prev  = document.getElementById('ds-preview');
+  if(!jobId || !planModalDate || !start || !end){ prev.innerHTML = ''; return; }
+  const p = calcShift({jobId, date: planModalDate, start, end, breakMin});
+  const hh = Math.floor(p.hours), hm = Math.round((p.hours % 1) * 60);
+  prev.innerHTML = `<div class="calc-box" style="margin-top:10px;">
+    <div class="calc-row"><span class="lbl">勤務時間</span><span class="val">${hh}時間${hm}分</span></div>
+    <div class="calc-row"><span class="lbl">基本給</span><span class="val">¥${p.base.toLocaleString()}</span></div>
+    <div class="calc-row"><span class="lbl">割増</span><span class="val">¥${p.extra.toLocaleString()}</span></div>
+    <div class="calc-row"><span class="lbl">交通費</span><span class="val">¥${p.transport.toLocaleString()}</span></div>
+    <div class="calc-row ttl"><span class="lbl">合計</span><span class="val">¥${p.total.toLocaleString()}</span></div>
+  </div>`;
+}
+
+function saveDayShift(){
+  const jobId = document.getElementById('ds-job').value;
+  const start = document.getElementById('ds-start').value;
+  const end   = document.getElementById('ds-end').value;
+  const breakMin = parseInt(document.getElementById('ds-break').value) || 0;
+  if(!jobId || !planModalDate || !start || !end){ showToast('⚠ バイト先と時刻を入力してください', '⚠'); return; }
+  state.shifts.push({id: Date.now().toString(), jobId, date: planModalDate, start, end, breakMin, memo: ''});
+  save(); renderPlan(); renderHome(); renderShiftList();
+  renderDayExistingShifts(planModalDate);
+  document.getElementById('ds-start').value = '';
+  document.getElementById('ds-end').value   = '';
+  document.getElementById('ds-break').value = '0';
+  document.getElementById('ds-preview').innerHTML = '';
+  showToast('シフトを追加しました ✓');
+}
+
+// ── テンプレート選択（モーダル内）──
+function renderTplSelectList(){
+  const area = document.getElementById('tpl-select-list');
+  if(!area) return;
+  if(!(state.shiftTemplates||[]).length){
+    area.innerHTML = '<div style="text-align:center;color:var(--text-sub);font-size:13px;padding:24px 0;">テンプレートがまだありません<br><span style="font-size:11px;margin-top:6px;display:block;">「シフト計画」タブ下部から追加できます</span></div>';
+    return;
+  }
+  area.innerHTML = state.shiftTemplates.map(tpl => {
+    const job = state.jobs.find(j => j.id === tpl.jobId);
+    let amtStr = '';
+    if(job && planModalDate){
+      const p = calcShift({jobId: tpl.jobId, date: planModalDate, start: tpl.start, end: tpl.end, breakMin: tpl.breakMin || 0});
+      amtStr = `<div class="tpl-chip-amt">¥${p.total.toLocaleString()}</div>`;
+    }
+    return `<div class="tpl-chip tappable" onclick="applyTemplate('${tpl.id}')">
+      <div style="width:8px;height:8px;border-radius:50%;background:${job?.color||'#888'};flex-shrink:0;"></div>
+      <div class="tpl-chip-info">
+        <div class="tpl-chip-name">${tpl.name}</div>
+        <div class="tpl-chip-detail">${job?.name||'?'} / ${tpl.start}〜${tpl.end}${tpl.breakMin>0?' 休'+tpl.breakMin+'分':''}</div>
+      </div>
+      ${amtStr}
+    </div>`;
+  }).join('');
+}
+
+function applyTemplate(tplId){
+  const tpl = (state.shiftTemplates||[]).find(t => t.id === tplId);
+  if(!tpl || !planModalDate) return;
+  state.shifts.push({id: Date.now().toString(), jobId: tpl.jobId, date: planModalDate, start: tpl.start, end: tpl.end, breakMin: tpl.breakMin || 0, memo: tpl.name});
+  save(); renderPlan(); renderHome(); renderShiftList();
+  renderDayExistingShifts(planModalDate);
+  showToast(`「${tpl.name}」を追加しました ✓`);
+}
+
+// ── テンプレート管理（計画タブ下部）──
+function renderTemplateList(){
+  const area = document.getElementById('plan-template-list');
+  if(!area) return;
+  if(!(state.shiftTemplates||[]).length){
+    area.innerHTML = '<div style="text-align:center;color:var(--text-sub);font-size:13px;padding:20px;background:var(--surface);border:1px solid var(--border);border-radius:12px;">テンプレートがまだありません<br><span style="font-size:11px;">右上の「追加」から登録できます</span></div>';
+    return;
+  }
+  area.innerHTML = state.shiftTemplates.map(tpl => {
+    const job = state.jobs.find(j => j.id === tpl.jobId);
+    return `<div class="tpl-chip">
+      <div style="width:8px;height:8px;border-radius:50%;background:${job?.color||'#888'};flex-shrink:0;"></div>
+      <div class="tpl-chip-info">
+        <div class="tpl-chip-name">${tpl.name}</div>
+        <div class="tpl-chip-detail">${job?.name||'?'} / ${tpl.start}〜${tpl.end}${tpl.breakMin>0?' 休'+tpl.breakMin+'分':''}</div>
+      </div>
+      <button class="btn btn-danger" style="padding:6px 10px;flex-shrink:0;" onclick="deleteTemplate('${tpl.id}')">
+        <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+    </div>`;
+  }).join('');
+}
+
+function openAddTemplateModal(){
+  const sel = document.getElementById('tpl-job');
+  sel.innerHTML = '<option value="">選択してください</option>' + state.jobs.map(j => `<option value="${j.id}">${j.name} (¥${j.wage})</option>`).join('');
+  document.getElementById('tpl-name').value  = '';
+  document.getElementById('tpl-start').value = '';
+  document.getElementById('tpl-end').value   = '';
+  document.getElementById('tpl-break').value = '0';
+  openOverlay('overlay-add-tpl');
+}
+
+function saveTemplate(){
+  const name     = document.getElementById('tpl-name').value.trim();
+  const jobId    = document.getElementById('tpl-job').value;
+  const start    = document.getElementById('tpl-start').value;
+  const end      = document.getElementById('tpl-end').value;
+  const breakMin = parseInt(document.getElementById('tpl-break').value) || 0;
+  if(!name || !jobId || !start || !end){ showToast('⚠ 全項目を入力してください', '⚠'); return; }
+  if(!state.shiftTemplates) state.shiftTemplates = [];
+  state.shiftTemplates.push({id: Date.now().toString(), name, jobId, start, end, breakMin});
+  save(); renderTemplateList(); closeOverlay('overlay-add-tpl');
+  showToast(`テンプレート「${name}」を追加しました ✓`);
+}
+
+function deleteTemplate(id){
+  state.shiftTemplates = (state.shiftTemplates||[]).filter(t => t.id !== id);
+  save(); renderTemplateList();
+  showToast('テンプレートを削除しました', '🗑');
+}
+
+// ═══════════════════════════════════════════════
 // BOOT
 // ═══════════════════════════════════════════════
-function renderAll(){ updateJobSelector(); renderHome(); renderShiftList(); }
+function renderAll(){ updateJobSelector(); renderHome(); renderShiftList(); renderPlan(); }
 
 
 init();
