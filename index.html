@@ -105,9 +105,10 @@ canvas{width:100%!important;}
 .sec-title{font-size:11px;letter-spacing:3px;color:var(--text-sub);text-transform:uppercase;margin:20px 0 12px;}
 
 /* ── FORMS ──────────────────────────── */
-.fgroup{margin-bottom:14px;}
+.fgroup{margin-bottom:14px;min-width:0;}
 .flabel{font-size:12px;color:var(--text-sub);display:block;margin-bottom:7px;letter-spacing:0.5px;}
-.finput,.fselect{width:100%;min-width:0;background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:11px 14px;color:var(--text);font-family:'Zen Kaku Gothic New',sans-serif;font-size:15px;outline:none;transition:all 0.2s;}
+.finput,.fselect{width:100%;min-width:0;max-width:100%;background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:11px 14px;color:var(--text);font-family:'Zen Kaku Gothic New',sans-serif;font-size:15px;outline:none;transition:all 0.2s;}
+input[type="date"].finput,input[type="time"].finput{-webkit-appearance:none;appearance:none;}
 .finput:focus,.fselect:focus{border-color:var(--accent);background:var(--surface3);box-shadow:0 0 0 3px rgba(200,240,96,0.1);}
 .fselect option{background:var(--surface2);}
 .frow{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
@@ -694,6 +695,18 @@ canvas{width:100%!important;}
   </div>
 </div>
 
+<!-- ── MODAL: ホームカレンダー日別詳細 ── -->
+<div class="overlay" id="overlay-home-day" onclick="if(event.target===this)closeOverlay('overlay-home-day')">
+  <div class="modal">
+    <div class="modal-drag"></div>
+    <div class="modal-title" id="home-day-title">日別詳細</div>
+    <div id="home-day-body"></div>
+    <div class="modal-actions" style="margin-top:12px;">
+      <button class="btn btn-outline" style="width:100%;" onclick="closeOverlay('overlay-home-day')">閉じる</button>
+    </div>
+  </div>
+</div>
+
 <div class="toast" id="toast"><span id="toast-icon">✓</span><span id="toast-msg"></span></div>
 
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
@@ -974,16 +987,13 @@ function renderHome(){
 
   const t=monthCalc(year,month);
   const hist=state.history.find(h=>h.year===year&&h.month===month);
-  if(hist){
-    let confTotal=0;
-    (hist.entries||[]).forEach(e=>{ confTotal+=(e.taxable||0)+(e.nonTaxable||0); });
-    animNum('hero-total', confTotal);
-    document.getElementById('hero-sub-total').textContent=`確定済み（課税＋非課税）`;
-  } else {
-    animNum('hero-total', t.total);
-    const hh=Math.floor(t.hours), hm=Math.round((t.hours%1)*60);
-    document.getElementById('hero-sub-total').textContent=`${t.days}日 / ${hh}時間${hm}分勤務`;
-  }
+  // 今月総額は常に入力シフトの合計
+  animNum('hero-total', t.total);
+  const hh=Math.floor(t.hours), hm=Math.round((t.hours%1)*60);
+  const subText = t.days > 0
+    ? `${t.days}日 / ${hh}時間${hm}分${hist?' ✓確定あり':''}`
+    : hist ? '✓ 給与確定済み' : 'シフト未登録';
+  document.getElementById('hero-sub-total').textContent = subText;
   document.getElementById('stat-transport').textContent='¥'+t.transport.toLocaleString();
   document.getElementById('stat-days-detail').textContent=`${t.days}日出勤`;
 
@@ -1066,13 +1076,49 @@ function renderHomeCalendar(year, month){
     });
     // 確定済み月は全体にうっすら緑のグロー
     const confirmedStyle = hist ? 'border-color:rgba(200,240,96,0.25);' : '';
-    html+=`<div class="${cls}" style="${confirmedStyle}" onclick="">
+    html+=`<div class="${cls}" style="${confirmedStyle}" onclick="openHomeDayModal('${dateStr}')">
       <div class="cal-num">${d}</div>
       <div class="cal-shift-dots">${dots}</div>
       ${dayTotal>0?`<div class="cal-day-total">¥${dayTotal.toLocaleString()}</div>`:''}
     </div>`;
   }
   cal.innerHTML = html;
+}
+
+function openHomeDayModal(dateStr){
+  const d=new Date(dateStr+'T00:00:00');
+  const y=d.getFullYear(), m=d.getMonth()+1, day=d.getDate();
+  const dayShifts=(state.shifts||[]).filter(s=>s.date===dateStr);
+  const title=`${y}年${m}月${day}日`;
+  document.getElementById('home-day-title').textContent=title;
+  let html='';
+  if(dayShifts.length===0){
+    html='<p style="color:var(--text-sub);text-align:center;padding:16px 0;">この日のシフトはありません</p>';
+  } else {
+    let dayTotal=0;
+    dayShifts.forEach(s=>{
+      const job=state.jobs.find(j=>j.id===s.jobId);
+      const p=calcShift(s);
+      dayTotal+=p.total;
+      const hh=Math.floor(p.hours), hm=Math.round((p.hours%1)*60);
+      html+=`<div style="background:var(--surface2);border-radius:10px;padding:12px 14px;margin-bottom:8px;">
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;">
+          <span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:${job?.color||'#888'};flex-shrink:0;"></span>
+          <span style="font-weight:600;">${job?.name||'不明'}</span>
+        </div>
+        <div style="color:var(--text-sub);font-size:13px;margin-bottom:4px;">${s.start}〜${s.end}（休憩${s.breakMin||0}分）/ ${hh}時間${hm>0?hm+'分':''}</div>
+        <div style="display:flex;justify-content:space-between;font-size:13px;">
+          <span style="color:var(--text-sub);">基本 ¥${p.base.toLocaleString()}${p.extra>0?' + 割増 ¥'+p.extra.toLocaleString():''}</span>
+          <span style="font-weight:700;color:var(--accent);">¥${p.total.toLocaleString()}</span>
+        </div>
+      </div>`;
+    });
+    if(dayShifts.length>1){
+      html+=`<div style="text-align:right;font-size:15px;font-weight:700;padding:4px 2px;">合計 ¥${dayTotal.toLocaleString()}</div>`;
+    }
+  }
+  document.getElementById('home-day-body').innerHTML=html;
+  document.getElementById('overlay-home-day').classList.add('active');
 }
 
 function animNum(id,target){
