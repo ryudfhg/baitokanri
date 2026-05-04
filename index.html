@@ -696,7 +696,7 @@ input[type="date"].finput,input[type="time"].finput{-webkit-appearance:none;appe
 </div>
 
 <!-- ── MODAL: ホームカレンダー日別詳細 ── -->
-<div class="overlay" id="overlay-home-day" onclick="if(event.target===this)closeOverlay('overlay-home-day')">
+<div class="overlay" id="overlay-home-day">
   <div class="modal">
     <div class="modal-drag"></div>
     <div class="modal-title" id="home-day-title">日別詳細</div>
@@ -835,8 +835,7 @@ function importData(input){
       if(p.history) state.history = p.history;
       if(p.fuyoLimit != null) state.fuyoLimit = p.fuyoLimit;
       if(p.fuyoIncludeEstimate != null) state.fuyoIncludeEstimate = p.fuyoIncludeEstimate;
-      if(p.shiftTemplates) state.shiftTemplates = p.shiftTemplates;
-      if(p.planShifts) state.planShifts = p.planShifts;
+      state.shiftTemplates = p.shiftTemplates || [];
       save(); renderAll();
       const fi = document.getElementById('fuyo-limit-input');
       if(fi) fi.value = state.fuyoLimit ?? 1030000;
@@ -1076,13 +1075,16 @@ function renderHomeCalendar(year, month){
     });
     // 確定済み月は全体にうっすら緑のグロー
     const confirmedStyle = hist ? 'border-color:rgba(200,240,96,0.25);' : '';
-    html+=`<div class="${cls}" style="${confirmedStyle}" onclick="openHomeDayModal('${dateStr}')">
+    html+=`<div class="${cls}" style="${confirmedStyle}" data-date="${dateStr}">
       <div class="cal-num">${d}</div>
       <div class="cal-shift-dots">${dots}</div>
       ${dayTotal>0?`<div class="cal-day-total">¥${dayTotal.toLocaleString()}</div>`:''}
     </div>`;
   }
   cal.innerHTML = html;
+  cal.querySelectorAll('.cal-cell:not(.empty)').forEach(cell => {
+    cell.addEventListener('click', () => openHomeDayModal(cell.dataset.date));
+  });
 }
 
 function openHomeDayModal(dateStr){
@@ -1118,7 +1120,7 @@ function openHomeDayModal(dateStr){
     }
   }
   document.getElementById('home-day-body').innerHTML=html;
-  document.getElementById('overlay-home-day').classList.add('active');
+  openOverlay('overlay-home-day');
 }
 
 function animNum(id,target){
@@ -1761,27 +1763,13 @@ function changePlanMonth(d){
   renderPlan();
 }
 
-// planShifts ヘルパー（state.shifts とは完全に独立）
-function planMonthShifts(y, m){
-  return (state.planShifts||[]).filter(s=>{
-    const d=new Date(s.date+'T00:00:00');
-    return d.getFullYear()===y && d.getMonth()+1===m;
-  });
-}
-function planMonthCalc(y, m){
-  const shifts=planMonthShifts(y,m);
-  let base=0,extra=0,transport=0,hours=0;
-  shifts.forEach(s=>{ const p=calcShift(s); base+=p.base; extra+=p.extra; transport+=p.transport; hours+=p.hours; });
-  return {base,extra,transport,total:base+extra+transport,hours,days:shifts.length};
-}
 
 function renderPlan(){
   if(!state.planViewMonth) return;
   const {year, month} = state.planViewMonth;
   const label = document.getElementById('plan-month-label');
   if(label) label.textContent = `${year}年 ${month}月`;
-  // サマリー（planShifts のみ）
-  const t = planMonthCalc(year, month);
+  const t = monthCalc(year, month);
   const pd = document.getElementById('plan-days');
   const ph = document.getElementById('plan-hours');
   const pt = document.getElementById('plan-total');
@@ -1801,8 +1789,7 @@ function renderPlanCalendar(year, month){
   const daysInMonth = new Date(year, month, 0).getDate();
   const fmt2 = n => String(n).padStart(2, '0');
 
-  // 日→シフト一覧マップ（planShifts のみ）
-  const shiftsThisMonth = planMonthShifts(year, month);
+  const shiftsThisMonth = monthShifts(year, month);
   const dayMap = {};
   shiftsThisMonth.forEach(s => {
     const d = parseInt(s.date.split('-')[2]);
@@ -1872,7 +1859,7 @@ function openDayModal(dateStr){
 function renderDayExistingShifts(dateStr){
   const area = document.getElementById('day-existing-shifts');
   if(!area) return;
-  const existing = (state.planShifts||[]).filter(s => s.date === dateStr);
+  const existing = (state.shifts||[]).filter(s => s.date === dateStr);
   if(!existing.length){ area.innerHTML = ''; return; }
   area.innerHTML = `<div style="margin-bottom:14px;">
     <div style="font-size:10px;letter-spacing:1px;color:var(--text-sub);margin-bottom:8px;text-transform:uppercase;">登録済みシフト</div>
@@ -1892,8 +1879,8 @@ function renderDayExistingShifts(dateStr){
 }
 
 function deletePlanShift(id){
-  state.planShifts = (state.planShifts||[]).filter(s => s.id !== id);
-  save(); renderPlan();
+  state.shifts = (state.shifts||[]).filter(s => s.id !== id);
+  save(); renderHome(); renderShiftList(); renderPlan();
   renderDayExistingShifts(planModalDate);
   showToast('シフトを削除しました', '🗑');
 }
@@ -1930,9 +1917,9 @@ function saveDayShift(){
   const end   = document.getElementById('ds-end').value;
   const breakMin = parseInt(document.getElementById('ds-break').value) || 0;
   if(!jobId || !planModalDate || !start || !end){ showToast('⚠ バイト先と時刻を入力してください', '⚠'); return; }
-  if(!state.planShifts) state.planShifts=[];
-  state.planShifts.push({id: Date.now().toString(), jobId, date: planModalDate, start, end, breakMin, memo: ''});
-  save(); renderPlan();
+  if(!state.shifts) state.shifts=[];
+  state.shifts.push({id: Date.now().toString(), jobId, date: planModalDate, start, end, breakMin, memo: ''});
+  save(); renderHome(); renderShiftList(); renderPlan();
   renderDayExistingShifts(planModalDate);
   document.getElementById('ds-start').value = '';
   document.getElementById('ds-end').value   = '';
@@ -1970,9 +1957,9 @@ function renderTplSelectList(){
 function applyTemplate(tplId){
   const tpl = (state.shiftTemplates||[]).find(t => t.id === tplId);
   if(!tpl || !planModalDate) return;
-  if(!state.planShifts) state.planShifts=[];
-  state.planShifts.push({id: Date.now().toString(), jobId: tpl.jobId, date: planModalDate, start: tpl.start, end: tpl.end, breakMin: tpl.breakMin || 0, memo: tpl.name});
-  save(); renderPlan();
+  if(!state.shifts) state.shifts=[];
+  state.shifts.push({id: Date.now().toString(), jobId: tpl.jobId, date: planModalDate, start: tpl.start, end: tpl.end, breakMin: tpl.breakMin || 0, memo: tpl.name});
+  save(); renderHome(); renderShiftList(); renderPlan();
   renderDayExistingShifts(planModalDate);
   showToast(`「${tpl.name}」を追加しました ✓`);
 }
