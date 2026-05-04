@@ -682,12 +682,13 @@ input[type="date"].finput,input[type="time"].finput{-webkit-appearance:none;appe
     <div class="modal-drag"></div>
     <div class="modal-title">テンプレートを追加</div>
     <div class="fgroup"><label class="flabel">テンプレート名</label><input type="text" class="finput" id="tpl-name" placeholder="例: 早番・遅番など"></div>
-    <div class="fgroup"><label class="flabel">バイト先</label><select class="fselect" id="tpl-job"><option value="">選択してください</option></select></div>
+    <div class="fgroup"><label class="flabel">バイト先</label><select class="fselect" id="tpl-job" onchange="fillTplTransport()"><option value="">選択してください</option></select></div>
     <div class="frow">
       <div class="fgroup"><label class="flabel">出勤時刻</label><input type="time" class="finput" id="tpl-start"></div>
       <div class="fgroup"><label class="flabel">退勤時刻</label><input type="time" class="finput" id="tpl-end"></div>
     </div>
     <div class="fgroup"><label class="flabel">休憩（分）</label><input type="number" class="finput" id="tpl-break" value="0" min="0" step="15"></div>
+    <div class="fgroup"><label class="flabel">交通費（円/回）</label><input type="number" class="finput" id="tpl-transport" value="0" min="0" placeholder="0"></div>
     <div class="modal-actions">
       <button class="btn btn-outline" onclick="closeOverlay('overlay-add-tpl')">キャンセル</button>
       <button class="btn btn-primary" style="margin:0;" onclick="saveTemplate()">保存する</button>
@@ -961,7 +962,8 @@ function calcShift(shift){
     const nm=nightMins(sMin,eMin,shift.breakMin||0);
     if(nm>0){ const p=(nm/60)*job.wage*0.25; extra+=p; bd.push(`深夜 ${nm}分×¥${job.wage}×0.25=¥${Math.floor(p).toLocaleString()}`); }
   }
-  return {base:Math.floor(base),extra:Math.floor(extra),transport:job.transport||0,total:Math.floor(base+extra+(job.transport||0)),hours:workH,effectiveWage:effWage,isWE:weekend,breakdown:bd};
+  const transport = (shift.transport != null) ? shift.transport : (job.transport || 0);
+  return {base:Math.floor(base),extra:Math.floor(extra),transport,total:Math.floor(base+extra+transport),hours:workH,effectiveWage:effWage,isWE:weekend,breakdown:bd};
 }
 function nightMins(s,e,br){
   const nS=22*60,nE=29*60;
@@ -969,12 +971,22 @@ function nightMins(s,e,br){
   if(e<=1440) n+=Math.max(0,Math.min(e,300)-Math.max(s,0));
   return Math.round(Math.max(0,n-br*0.3));
 }
-function monthShifts(y,m){ return state.shifts.filter(s=>{ const d=new Date(s.date+'T00:00:00'); return d.getFullYear()===y&&d.getMonth()+1===m; }); }
+function inputShifts(){ return (state.shifts||[]).filter(s=>s.source!=='plan'); }
+function monthShifts(y,m){ return inputShifts().filter(s=>{ const d=new Date(s.date+'T00:00:00'); return d.getFullYear()===y&&d.getMonth()+1===m; }); }
+function allMonthShifts(y,m){ return (state.shifts||[]).filter(s=>{ const d=new Date(s.date+'T00:00:00'); return d.getFullYear()===y&&d.getMonth()+1===m; }); }
+function allMonthCalc(y,m){
+  const shifts=allMonthShifts(y,m);
+  let base=0,extra=0,transport=0,hours=0;
+  shifts.forEach(s=>{ const p=calcShift(s); base+=p.base; extra+=p.extra; transport+=p.transport; hours+=p.hours; });
+  const days=new Set(shifts.map(s=>s.date)).size;
+  return {base,extra,transport,total:base+extra+transport,hours,days};
+}
 function monthCalc(y,m){
   const shifts=monthShifts(y,m);
   let base=0,extra=0,transport=0,hours=0;
   shifts.forEach(s=>{ const p=calcShift(s); base+=p.base; extra+=p.extra; transport+=p.transport; hours+=p.hours; });
-  return {base,extra,transport,total:base+extra+transport,hours,days:shifts.length};
+  const days=new Set(shifts.map(s=>s.date)).size;
+  return {base,extra,transport,total:base+extra+transport,hours,days};
 }
 
 // ═══════════════════════════════════════════════
@@ -1041,9 +1053,9 @@ function renderHomeCalendar(year, month){
   const firstDow = new Date(year, month-1, 1).getDay();
   const daysInMonth = new Date(year, month, 0).getDate();
   const fmt2 = n => String(n).padStart(2,'0');
-  // 日→シフトマップ (state.shifts から)
+  // 日→シフトマップ (入力タブのシフトのみ)
   const dayMap = {};
-  state.shifts.filter(s=>{
+  inputShifts().filter(s=>{
     const d=new Date(s.date+'T00:00:00');
     return d.getFullYear()===year&&d.getMonth()+1===month;
   }).forEach(s=>{
@@ -1090,7 +1102,7 @@ function renderHomeCalendar(year, month){
 function openHomeDayModal(dateStr){
   const d=new Date(dateStr+'T00:00:00');
   const y=d.getFullYear(), m=d.getMonth()+1, day=d.getDate();
-  const dayShifts=(state.shifts||[]).filter(s=>s.date===dateStr);
+  const dayShifts=inputShifts().filter(s=>s.date===dateStr);
   const title=`${y}年${m}月${day}日`;
   document.getElementById('home-day-title').textContent=title;
   let html='';
@@ -1441,7 +1453,7 @@ function saveShift(){
   const end=document.getElementById('inp-end').value;
   const breakMin=parseInt(document.getElementById('inp-break').value)||0;
   if(!jobId||!date||!start||!end){ showToast('⚠ 全ての必須項目を入力してください','⚠'); return; }
-  state.shifts.push({id:Date.now().toString(),jobId,date,start,end,breakMin,memo:''});
+  state.shifts.push({id:Date.now().toString(),jobId,date,start,end,breakMin,memo:'',source:'input'});
   save(); renderShiftList(); renderHome(); renderPlan();
   showToast('シフトを登録しました ✓');
   document.getElementById('inp-job').value='';
@@ -1769,7 +1781,7 @@ function renderPlan(){
   const {year, month} = state.planViewMonth;
   const label = document.getElementById('plan-month-label');
   if(label) label.textContent = `${year}年 ${month}月`;
-  const t = monthCalc(year, month);
+  const t = allMonthCalc(year, month);
   const pd = document.getElementById('plan-days');
   const ph = document.getElementById('plan-hours');
   const pt = document.getElementById('plan-total');
@@ -1789,7 +1801,7 @@ function renderPlanCalendar(year, month){
   const daysInMonth = new Date(year, month, 0).getDate();
   const fmt2 = n => String(n).padStart(2, '0');
 
-  const shiftsThisMonth = monthShifts(year, month);
+  const shiftsThisMonth = allMonthShifts(year, month);
   const dayMap = {};
   shiftsThisMonth.forEach(s => {
     const d = parseInt(s.date.split('-')[2]);
@@ -1819,7 +1831,11 @@ function renderPlanCalendar(year, month){
       const job = state.jobs.find(j => j.id === s.jobId);
       const p = calcShift(s);
       dayTotal += p.total;
-      dots += `<div class="cal-shift-dot" style="background:${job?.color||'#888'}"></div>`;
+      const color = job?.color || '#888';
+      const dotStyle = (s.source === 'plan')
+        ? `background:transparent;border:1.5px solid ${color};box-sizing:border-box;`
+        : `background:${color};`;
+      dots += `<div class="cal-shift-dot" style="${dotStyle}"></div>`;
     });
 
     html += `<div class="${cls}" onclick="openDayModal('${dateStr}')">
@@ -1866,9 +1882,14 @@ function renderDayExistingShifts(dateStr){
     ${existing.map(s => {
       const job = state.jobs.find(j => j.id === s.jobId);
       const p = calcShift(s);
+      const isActual = s.source !== 'plan';
+      const badge = isActual
+        ? `<span style="font-size:9px;background:rgba(200,240,96,0.15);color:var(--accent);border:1px solid rgba(200,240,96,0.3);border-radius:3px;padding:1px 5px;flex-shrink:0;">実績</span>`
+        : `<span style="font-size:9px;background:var(--surface3);color:var(--text-sub);border:1px solid var(--border);border-radius:3px;padding:1px 5px;flex-shrink:0;">計画</span>`;
       return `<div style="display:flex;align-items:center;gap:10px;padding:9px 12px;background:var(--surface2);border:1px solid var(--border);border-radius:10px;margin-bottom:6px;">
         <div style="width:7px;height:7px;border-radius:50%;background:${job?.color||'#888'};flex-shrink:0;"></div>
         <div style="flex:1;font-size:12px;">${job?.name||'不明'}&ensp;${s.start}〜${s.end}${s.breakMin>0?' 休'+s.breakMin+'分':''}</div>
+        ${badge}
         <div style="font-family:'Bebas Neue';font-size:16px;color:var(--accent);">¥${p.total.toLocaleString()}</div>
         <button onclick="deletePlanShift('${s.id}')" style="background:transparent;border:none;color:var(--red);cursor:pointer;padding:2px 4px;display:flex;">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
@@ -1918,7 +1939,7 @@ function saveDayShift(){
   const breakMin = parseInt(document.getElementById('ds-break').value) || 0;
   if(!jobId || !planModalDate || !start || !end){ showToast('⚠ バイト先と時刻を入力してください', '⚠'); return; }
   if(!state.shifts) state.shifts=[];
-  state.shifts.push({id: Date.now().toString(), jobId, date: planModalDate, start, end, breakMin, memo: ''});
+  state.shifts.push({id: Date.now().toString(), jobId, date: planModalDate, start, end, breakMin, memo: '', source: 'plan'});
   save(); renderHome(); renderShiftList(); renderPlan();
   renderDayExistingShifts(planModalDate);
   document.getElementById('ds-start').value = '';
@@ -1940,14 +1961,14 @@ function renderTplSelectList(){
     const job = state.jobs.find(j => j.id === tpl.jobId);
     let amtStr = '';
     if(job && planModalDate){
-      const p = calcShift({jobId: tpl.jobId, date: planModalDate, start: tpl.start, end: tpl.end, breakMin: tpl.breakMin || 0});
+      const p = calcShift({jobId: tpl.jobId, date: planModalDate, start: tpl.start, end: tpl.end, breakMin: tpl.breakMin || 0, transport: tpl.transport ?? null});
       amtStr = `<div class="tpl-chip-amt">¥${p.total.toLocaleString()}</div>`;
     }
     return `<div class="tpl-chip tappable" onclick="applyTemplate('${tpl.id}')">
       <div style="width:8px;height:8px;border-radius:50%;background:${job?.color||'#888'};flex-shrink:0;"></div>
       <div class="tpl-chip-info">
         <div class="tpl-chip-name">${tpl.name}</div>
-        <div class="tpl-chip-detail">${job?.name||'?'} / ${tpl.start}〜${tpl.end}${tpl.breakMin>0?' 休'+tpl.breakMin+'分':''}</div>
+        <div class="tpl-chip-detail">${job?.name||'?'} / ${tpl.start}〜${tpl.end}${tpl.breakMin>0?' 休'+tpl.breakMin+'分':''}${tpl.transport!=null?' 交通費¥'+tpl.transport:''}</div>
       </div>
       ${amtStr}
     </div>`;
@@ -1958,7 +1979,7 @@ function applyTemplate(tplId){
   const tpl = (state.shiftTemplates||[]).find(t => t.id === tplId);
   if(!tpl || !planModalDate) return;
   if(!state.shifts) state.shifts=[];
-  state.shifts.push({id: Date.now().toString(), jobId: tpl.jobId, date: planModalDate, start: tpl.start, end: tpl.end, breakMin: tpl.breakMin || 0, memo: tpl.name});
+  state.shifts.push({id: Date.now().toString(), jobId: tpl.jobId, date: planModalDate, start: tpl.start, end: tpl.end, breakMin: tpl.breakMin || 0, transport: tpl.transport ?? null, memo: tpl.name, source: 'plan'});
   save(); renderHome(); renderShiftList(); renderPlan();
   renderDayExistingShifts(planModalDate);
   showToast(`「${tpl.name}」を追加しました ✓`);
@@ -1990,11 +2011,17 @@ function renderTemplateList(){
 function openAddTemplateModal(){
   const sel = document.getElementById('tpl-job');
   sel.innerHTML = '<option value="">選択してください</option>' + state.jobs.map(j => `<option value="${j.id}">${j.name} (¥${j.wage})</option>`).join('');
-  document.getElementById('tpl-name').value  = '';
-  document.getElementById('tpl-start').value = '';
-  document.getElementById('tpl-end').value   = '';
-  document.getElementById('tpl-break').value = '0';
+  document.getElementById('tpl-name').value      = '';
+  document.getElementById('tpl-start').value     = '';
+  document.getElementById('tpl-end').value       = '';
+  document.getElementById('tpl-break').value     = '0';
+  document.getElementById('tpl-transport').value = '0';
   openOverlay('overlay-add-tpl');
+}
+function fillTplTransport(){
+  const jobId = document.getElementById('tpl-job').value;
+  const job = state.jobs.find(j => j.id === jobId);
+  document.getElementById('tpl-transport').value = job ? (job.transport || 0) : '0';
 }
 
 function saveTemplate(){
@@ -2002,10 +2029,11 @@ function saveTemplate(){
   const jobId    = document.getElementById('tpl-job').value;
   const start    = document.getElementById('tpl-start').value;
   const end      = document.getElementById('tpl-end').value;
-  const breakMin = parseInt(document.getElementById('tpl-break').value) || 0;
+  const breakMin  = parseInt(document.getElementById('tpl-break').value) || 0;
+  const transport = parseInt(document.getElementById('tpl-transport').value) ?? 0;
   if(!name || !jobId || !start || !end){ showToast('⚠ 全項目を入力してください', '⚠'); return; }
   if(!state.shiftTemplates) state.shiftTemplates = [];
-  state.shiftTemplates.push({id: Date.now().toString(), name, jobId, start, end, breakMin});
+  state.shiftTemplates.push({id: Date.now().toString(), name, jobId, start, end, breakMin, transport});
   save(); renderTemplateList(); closeOverlay('overlay-add-tpl');
   showToast(`テンプレート「${name}」を追加しました ✓`);
 }
