@@ -107,7 +107,7 @@ canvas{width:100%!important;}
 /* ── FORMS ──────────────────────────── */
 .fgroup{margin-bottom:14px;}
 .flabel{font-size:12px;color:var(--text-sub);display:block;margin-bottom:7px;letter-spacing:0.5px;}
-.finput,.fselect{width:100%;background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:11px 14px;color:var(--text);font-family:'Zen Kaku Gothic New',sans-serif;font-size:15px;outline:none;transition:all 0.2s;}
+.finput,.fselect{width:100%;min-width:0;background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:11px 14px;color:var(--text);font-family:'Zen Kaku Gothic New',sans-serif;font-size:15px;outline:none;transition:all 0.2s;}
 .finput:focus,.fselect:focus{border-color:var(--accent);background:var(--surface3);box-shadow:0 0 0 3px rgba(200,240,96,0.1);}
 .fselect option{background:var(--surface2);}
 .frow{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
@@ -350,7 +350,31 @@ canvas{width:100%!important;}
         <div style="background:var(--surface3);border-radius:4px;height:8px;overflow:hidden;">
           <div id="fuyo-bar" style="height:100%;border-radius:4px;background:var(--accent);transition:width 0.5s ease;width:0%;"></div>
         </div>
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-top:12px;padding-top:10px;border-top:1px solid var(--border);">
+          <div>
+            <div style="font-size:12px;color:var(--text-sub);">シフト見込みを含める</div>
+            <div style="font-size:10px;color:var(--text-dim);margin-top:2px;">未確定月のシフトを見込みとして計算</div>
+          </div>
+          <button class="toggle" id="fuyo-est-toggle" onclick="toggleFuyoEstimate()"></button>
+        </div>
         <div style="font-size:10px;color:var(--text-dim);margin-top:8px;" id="fuyo-note"></div>
+      </div>
+
+      <!-- ホームカレンダー -->
+      <div class="card" style="padding:12px;">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
+          <div class="card-label" style="margin:0;" id="home-cal-label">シフト一覧</div>
+        </div>
+        <div class="cal-grid" style="margin-bottom:4px;">
+          <div class="cal-head-cell" style="color:var(--red)">日</div>
+          <div class="cal-head-cell">月</div>
+          <div class="cal-head-cell">火</div>
+          <div class="cal-head-cell">水</div>
+          <div class="cal-head-cell">木</div>
+          <div class="cal-head-cell">金</div>
+          <div class="cal-head-cell" style="color:var(--accent2)">土</div>
+        </div>
+        <div class="cal-grid" id="home-calendar"></div>
       </div>
 
       <!-- History -->
@@ -374,7 +398,7 @@ canvas{width:100%!important;}
       <div class="fgroup"><label class="flabel">勤務日</label><input type="date" class="finput" id="inp-date" onchange="calcPreview()"></div>
 
       <!-- 出退勤時刻 -->
-      <div class="frow">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
         <div class="fgroup"><label class="flabel">出勤時刻</label><input type="time" class="finput" id="inp-start" onchange="calcPreview()"></div>
         <div class="fgroup"><label class="flabel">退勤時刻</label><input type="time" class="finput" id="inp-end" onchange="calcPreview()"></div>
       </div>
@@ -465,7 +489,7 @@ canvas{width:100%!important;}
       <div class="settings-card" style="margin-bottom:10px;">
         <div class="sitem">
           <div class="sicon"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="var(--accent2)" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg></div>
-          <div class="sinfo"><div class="sl">データをエクスポート</div><div class="ss">JSONファイルに書き出してバックアップ</div></div>
+          <div class="sinfo"><div class="sl">データをエクスポート</div><div class="ss">バイト先・シフト・給与履歴・テンプレートをJSON保存</div></div>
           <button class="btn btn-outline" style="font-size:12px;padding:7px 12px;color:var(--accent2);border-color:rgba(96,212,240,0.3);" onclick="exportData()">保存</button>
         </div>
         <div class="sitem">
@@ -692,9 +716,11 @@ let state = {
   shifts:[],
   history:[],
   fuyoLimit: 1030000,
+  fuyoIncludeEstimate: true,
   viewMonth:null,
   planViewMonth:null,
   shiftTemplates:[],
+  planShifts:[],
 };
 
 let confirmTarget = null; // {year,month}
@@ -774,13 +800,14 @@ function save(){
 }
 
 function exportData(){
-  const {viewMonth, ...exportState} = state;
+  const {viewMonth, planViewMonth, ...exportState} = state;
   const blob = new Blob([JSON.stringify(exportState, null, 2)], {type:'application/json'});
   const a = document.createElement('a');
   a.href = URL.createObjectURL(blob);
   a.download = `baito-backup-${new Date().toISOString().slice(0,10)}.json`;
   a.click();
-  showToast('バックアップを保存しました ✓');
+  const cnt = `バイト先${exportState.jobs.length}件・シフト${exportState.shifts.length}件・テンプレート${(exportState.shiftTemplates||[]).length}件`;
+  showToast(`バックアップ保存 ✓ （${cnt}）`);
 }
 
 function importData(input){
@@ -794,7 +821,9 @@ function importData(input){
       if(p.shifts)  state.shifts  = p.shifts;
       if(p.history) state.history = p.history;
       if(p.fuyoLimit != null) state.fuyoLimit = p.fuyoLimit;
+      if(p.fuyoIncludeEstimate != null) state.fuyoIncludeEstimate = p.fuyoIncludeEstimate;
       if(p.shiftTemplates) state.shiftTemplates = p.shiftTemplates;
+      if(p.planShifts) state.planShifts = p.planShifts;
       save(); renderAll();
       const fi = document.getElementById('fuyo-limit-input');
       if(fi) fi.value = state.fuyoLimit ?? 1030000;
@@ -984,6 +1013,66 @@ function renderHome(){
   renderHistory();
   renderChart(displayYear);
   renderFuyo(displayYear);
+  renderHomeCalendar(year, month);
+}
+
+function toggleFuyoEstimate(){
+  state.fuyoIncludeEstimate = !(state.fuyoIncludeEstimate ?? true);
+  save();
+  renderHome();
+}
+
+function renderHomeCalendar(year, month){
+  const cal = document.getElementById('home-calendar');
+  const label = document.getElementById('home-cal-label');
+  if(!cal) return;
+  if(label) label.textContent = `${month}月のシフト`;
+  const now = new Date();
+  const todayStr = now.toISOString().split('T')[0];
+  const firstDow = new Date(year, month-1, 1).getDay();
+  const daysInMonth = new Date(year, month, 0).getDate();
+  const fmt2 = n => String(n).padStart(2,'0');
+  // 日→シフトマップ (state.shifts から)
+  const dayMap = {};
+  state.shifts.filter(s=>{
+    const d=new Date(s.date+'T00:00:00');
+    return d.getFullYear()===year&&d.getMonth()+1===month;
+  }).forEach(s=>{
+    const d=parseInt(s.date.split('-')[2]);
+    if(!dayMap[d]) dayMap[d]=[];
+    dayMap[d].push(s);
+  });
+  // 月確定済みか
+  const hist = state.history.find(h=>h.year===year&&h.month===month);
+  let html='';
+  for(let i=0;i<firstDow;i++) html+='<div class="cal-cell empty"></div>';
+  for(let d=1;d<=daysInMonth;d++){
+    const dateStr=`${year}-${fmt2(month)}-${fmt2(d)}`;
+    const dow=new Date(dateStr+'T00:00:00').getDay();
+    const isToday=dateStr===todayStr;
+    const isSun=dow===0; const isSat=dow===6;
+    const isHol=isHoliday(dateStr);
+    let cls='cal-cell';
+    if(isToday) cls+=' today';
+    if((isSun||isHol)&&!isSat) cls+=' sun';
+    else if(isSat) cls+=' sat';
+    const dayS=dayMap[d]||[];
+    let dots='', dayTotal=0;
+    dayS.forEach(s=>{
+      const job=state.jobs.find(j=>j.id===s.jobId);
+      const p=calcShift(s);
+      dayTotal+=p.total;
+      dots+=`<div class="cal-shift-dot" style="background:${job?.color||'#888'}"></div>`;
+    });
+    // 確定済み月は全体にうっすら緑のグロー
+    const confirmedStyle = hist ? 'border-color:rgba(200,240,96,0.25);' : '';
+    html+=`<div class="${cls}" style="${confirmedStyle}" onclick="">
+      <div class="cal-num">${d}</div>
+      <div class="cal-shift-dots">${dots}</div>
+      ${dayTotal>0?`<div class="cal-day-total">¥${dayTotal.toLocaleString()}</div>`:''}
+    </div>`;
+  }
+  cal.innerHTML = html;
 }
 
 function animNum(id,target){
@@ -1017,15 +1106,19 @@ function renderFuyo(displayYear){
   const labelEl = document.getElementById('fuyo-card-label');
   if(labelEl) labelEl.textContent = `扶養ライン（${limitLabel}）`;
 
+  // トグル状態を反映
+  const inclEst = state.fuyoIncludeEstimate ?? true;
+  const tog = document.getElementById('fuyo-est-toggle');
+  if(tog) tog.classList.toggle('on', inclEst);
+
   // 今年度の課税合計 (前年12月 + 今年1〜11月)
-  // 確定済みの月は taxable を使用、未確定でシフトがある月は見込み(base+extra)で合算
   let taxSoFar = 0;
   let hasEstimate = false;
   // 前年12月
   const prevDec2 = state.history.find(h=>h.year===displayYear-1&&h.month===12);
   if(prevDec2){
     (prevDec2.entries||[]).forEach(e=>{ taxSoFar+=(e.taxable||0); });
-  } else {
+  } else if(inclEst){
     const est=monthCalc(displayYear-1,12);
     if(est.days>0){ taxSoFar+=est.base+est.extra; hasEstimate=true; }
   }
@@ -1034,7 +1127,7 @@ function renderFuyo(displayYear){
     const hist=state.history.find(h=>h.year===displayYear&&h.month===m);
     if(hist){
       (hist.entries||[]).forEach(e=>{ taxSoFar+=(e.taxable||0); });
-    } else {
+    } else if(inclEst){
       const est=monthCalc(displayYear,m);
       if(est.days>0){ taxSoFar+=est.base+est.extra; hasEstimate=true; }
     }
@@ -1083,7 +1176,9 @@ function renderFuyo(displayYear){
   document.getElementById('fuyo-progress-label').textContent = `¥ ${taxSoFar.toLocaleString()} / ¥ ${LIMIT.toLocaleString()}`;
   document.getElementById('fuyo-bar').style.width    = pct + '%';
   document.getElementById('fuyo-bar').style.background = over ? 'var(--red)' : pct > 80 ? 'var(--orange)' : 'var(--accent)';
-  document.getElementById('fuyo-note').textContent   = `※ 課税収入のみ集計。12月勤務分（翌年1月振込）は除外。確定済み＋シフト見込み（交通費除く）で計算。`;
+  document.getElementById('fuyo-note').textContent = inclEst
+    ? `※ 課税収入のみ集計。12月勤務分（翌年1月振込）は除外。確定済み＋シフト見込み（交通費除く）で計算。`
+    : `※ 課税収入のみ集計。12月勤務分（翌年1月振込）は除外。確定済みデータのみで計算。`;
 }
 
 function renderHistory(){
@@ -1506,7 +1601,7 @@ function showToast(msg,icon='✓'){
 // ═══════════════════════════════════════════════
 // DRUM ROLL (休憩時間ピッカー)
 // ═══════════════════════════════════════════════
-const BREAK_OPTIONS = [0,15,30,45,60,75,90,105,120];
+const BREAK_OPTIONS = Array.from({length:181},(_,i)=>i);
 const DRUM_ITEM_H   = 40;
 let drumReady = false;
 
@@ -1620,13 +1715,27 @@ function changePlanMonth(d){
   renderPlan();
 }
 
+// planShifts ヘルパー（state.shifts とは完全に独立）
+function planMonthShifts(y, m){
+  return (state.planShifts||[]).filter(s=>{
+    const d=new Date(s.date+'T00:00:00');
+    return d.getFullYear()===y && d.getMonth()+1===m;
+  });
+}
+function planMonthCalc(y, m){
+  const shifts=planMonthShifts(y,m);
+  let base=0,extra=0,transport=0,hours=0;
+  shifts.forEach(s=>{ const p=calcShift(s); base+=p.base; extra+=p.extra; transport+=p.transport; hours+=p.hours; });
+  return {base,extra,transport,total:base+extra+transport,hours,days:shifts.length};
+}
+
 function renderPlan(){
   if(!state.planViewMonth) return;
   const {year, month} = state.planViewMonth;
   const label = document.getElementById('plan-month-label');
   if(label) label.textContent = `${year}年 ${month}月`;
-  // サマリー
-  const t = monthCalc(year, month);
+  // サマリー（planShifts のみ）
+  const t = planMonthCalc(year, month);
   const pd = document.getElementById('plan-days');
   const ph = document.getElementById('plan-hours');
   const pt = document.getElementById('plan-total');
@@ -1646,8 +1755,8 @@ function renderPlanCalendar(year, month){
   const daysInMonth = new Date(year, month, 0).getDate();
   const fmt2 = n => String(n).padStart(2, '0');
 
-  // 日→シフト一覧マップ
-  const shiftsThisMonth = monthShifts(year, month);
+  // 日→シフト一覧マップ（planShifts のみ）
+  const shiftsThisMonth = planMonthShifts(year, month);
   const dayMap = {};
   shiftsThisMonth.forEach(s => {
     const d = parseInt(s.date.split('-')[2]);
@@ -1683,7 +1792,7 @@ function renderPlanCalendar(year, month){
     html += `<div class="${cls}" onclick="openDayModal('${dateStr}')">
       <div class="cal-num">${d}</div>
       <div class="cal-shift-dots">${dots}</div>
-      ${dayTotal > 0 ? `<div class="cal-day-total">¥${(dayTotal/1000).toFixed(1)}k</div>` : ''}
+      ${dayTotal > 0 ? `<div class="cal-day-total">¥${dayTotal.toLocaleString()}</div>` : ''}
     </div>`;
   }
   cal.innerHTML = html;
@@ -1717,7 +1826,7 @@ function openDayModal(dateStr){
 function renderDayExistingShifts(dateStr){
   const area = document.getElementById('day-existing-shifts');
   if(!area) return;
-  const existing = state.shifts.filter(s => s.date === dateStr);
+  const existing = (state.planShifts||[]).filter(s => s.date === dateStr);
   if(!existing.length){ area.innerHTML = ''; return; }
   area.innerHTML = `<div style="margin-bottom:14px;">
     <div style="font-size:10px;letter-spacing:1px;color:var(--text-sub);margin-bottom:8px;text-transform:uppercase;">登録済みシフト</div>
@@ -1737,8 +1846,8 @@ function renderDayExistingShifts(dateStr){
 }
 
 function deletePlanShift(id){
-  state.shifts = state.shifts.filter(s => s.id !== id);
-  save(); renderPlan(); renderHome(); renderShiftList();
+  state.planShifts = (state.planShifts||[]).filter(s => s.id !== id);
+  save(); renderPlan();
   renderDayExistingShifts(planModalDate);
   showToast('シフトを削除しました', '🗑');
 }
@@ -1775,8 +1884,9 @@ function saveDayShift(){
   const end   = document.getElementById('ds-end').value;
   const breakMin = parseInt(document.getElementById('ds-break').value) || 0;
   if(!jobId || !planModalDate || !start || !end){ showToast('⚠ バイト先と時刻を入力してください', '⚠'); return; }
-  state.shifts.push({id: Date.now().toString(), jobId, date: planModalDate, start, end, breakMin, memo: ''});
-  save(); renderPlan(); renderHome(); renderShiftList();
+  if(!state.planShifts) state.planShifts=[];
+  state.planShifts.push({id: Date.now().toString(), jobId, date: planModalDate, start, end, breakMin, memo: ''});
+  save(); renderPlan();
   renderDayExistingShifts(planModalDate);
   document.getElementById('ds-start').value = '';
   document.getElementById('ds-end').value   = '';
@@ -1814,8 +1924,9 @@ function renderTplSelectList(){
 function applyTemplate(tplId){
   const tpl = (state.shiftTemplates||[]).find(t => t.id === tplId);
   if(!tpl || !planModalDate) return;
-  state.shifts.push({id: Date.now().toString(), jobId: tpl.jobId, date: planModalDate, start: tpl.start, end: tpl.end, breakMin: tpl.breakMin || 0, memo: tpl.name});
-  save(); renderPlan(); renderHome(); renderShiftList();
+  if(!state.planShifts) state.planShifts=[];
+  state.planShifts.push({id: Date.now().toString(), jobId: tpl.jobId, date: planModalDate, start: tpl.start, end: tpl.end, breakMin: tpl.breakMin || 0, memo: tpl.name});
+  save(); renderPlan();
   renderDayExistingShifts(planModalDate);
   showToast(`「${tpl.name}」を追加しました ✓`);
 }
