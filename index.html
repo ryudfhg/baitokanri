@@ -553,6 +553,7 @@ input[type="date"].finput,input[type="time"].finput{-webkit-appearance:none;appe
             <div style="font-size:10px;color:var(--text-sub);">（税込）</div>
           </div>
         </div>
+        <div id="plan-job-breakdown"></div>
       </div>
 
       <!-- カレンダー -->
@@ -1838,8 +1839,61 @@ function renderPlan(){
   if(pd) pd.textContent = t.days;
   if(ph) ph.textContent = Math.floor(t.hours);
   if(pt) pt.textContent = '¥' + t.total.toLocaleString();
+  renderPlanJobBreakdown(year, month);
   renderPlanCalendar(year, month);
   renderTemplateList();
+}
+
+function renderPlanJobBreakdown(year, month){
+  const area = document.getElementById('plan-job-breakdown');
+  if(!area) return;
+
+  const shifts = allMonthShifts(year, month);
+  const statsMap = {};
+  shifts.forEach(s => {
+    if(!statsMap[s.jobId]) statsMap[s.jobId] = {total:0, hours:0, count:0};
+    const p = calcShift(s);
+    statsMap[s.jobId].total += p.total;
+    statsMap[s.jobId].hours += p.hours;
+    statsMap[s.jobId].count++;
+  });
+
+  const activeJobs = state.jobs.filter(j => statsMap[j.id]);
+  if(!activeJobs.length){ area.innerHTML = ''; return; }
+
+  const grandTotal = activeJobs.reduce((sum, j) => sum + statsMap[j.id].total, 0);
+
+  // プロポーショナルバー
+  const barSegs = activeJobs.map(job => {
+    const pct = grandTotal > 0 ? (statsMap[job.id].total / grandTotal * 100).toFixed(1) : 0;
+    return `<div style="flex:${pct};background:${job.color};min-width:${pct>0?2:0}px;"></div>`;
+  }).join('');
+
+  // 勤務先別行
+  const rows = activeJobs.map(job => {
+    const s = statsMap[job.id];
+    const pct = grandTotal > 0 ? Math.round(s.total / grandTotal * 100) : 0;
+    const hh = Math.floor(s.hours), hm = Math.round((s.hours % 1) * 60);
+    const timeStr = `${hh}h${hm > 0 ? hm + 'm' : ''}`;
+    return `<div style="display:flex;align-items:center;gap:10px;padding:7px 0;border-bottom:1px solid var(--border);">
+      <div style="width:7px;height:7px;border-radius:50%;background:${job.color};flex-shrink:0;"></div>
+      <div style="flex:1;min-width:0;">
+        <div style="font-size:12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${job.name}</div>
+        <div style="font-size:10px;color:var(--text-sub);">${s.count}回 / ${timeStr}</div>
+      </div>
+      <div style="text-align:right;flex-shrink:0;">
+        <div style="font-family:'Bebas Neue';font-size:18px;color:var(--white);line-height:1;">¥${s.total.toLocaleString()}</div>
+        <div style="font-size:10px;color:var(--text-sub);">${pct}%</div>
+      </div>
+    </div>`;
+  }).join('');
+
+  area.innerHTML = `
+    <div style="margin-top:14px;padding-top:12px;border-top:1px solid var(--border);">
+      <div style="font-size:10px;letter-spacing:1px;color:var(--text-sub);margin-bottom:8px;text-transform:uppercase;">勤務先別内訳</div>
+      <div style="display:flex;height:4px;border-radius:2px;overflow:hidden;gap:1px;margin-bottom:10px;">${barSegs}</div>
+      ${rows}
+    </div>`;
 }
 
 function renderPlanCalendar(year, month){
